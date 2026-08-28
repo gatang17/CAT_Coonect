@@ -1,0 +1,276 @@
+[
+  {
+    "key": "group_catp_location",
+    "title": "Location Details",
+    "fields": [
+      {
+        "key": "field_catp_location_type",
+        "label": "Type",
+        "name": "location_type",
+        "type": "text",
+        "instructions": "e.g. Classroom, Studio, Office. Matches the `type` column on the `location` table in database/schema.sql.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "Classroom",
+        "prepend": "",
+        "append": "",
+        "maxlength": ""
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "location" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Post Title = the location's name (e.g. \"Studio B\", \"Room 204\")."
+  },
+  {
+    "key": "group_catp_subject",
+    "title": "Class / Subject Details",
+    "fields": [
+      {
+        "key": "field_catp_subject_teacher",
+        "label": "Teacher",
+        "name": "subject_teacher",
+        "type": "post_object",
+        "instructions": "The teacher who teaches this class. Matches `subject.teacher_id` in database/schema.sql.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "post_type": ["teacher"],
+        "taxonomy": [],
+        "allow_null": 0,
+        "multiple": 0,
+        "return_format": "id",
+        "ui": 1
+      },
+      {
+        "key": "field_catp_subject_location",
+        "label": "Classroom",
+        "name": "subject_location",
+        "type": "post_object",
+        "instructions": "The classroom assigned to this class (not to the teacher). Matches `subject.location_id` in database/schema.sql. A peer tutor assigned to this subject inherits this classroom automatically — nothing extra to fill in for them.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "post_type": ["location"],
+        "taxonomy": [],
+        "allow_null": 0,
+        "multiple": 0,
+        "return_format": "id",
+        "ui": 1
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "subject" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Post Title = the class/subject name (e.g. \"Photography I\"). Note: this CPT is informational only — it does not drive the actual booking calendar. Teacher availability/scheduling for real bookings is configured separately inside the MotoPress Appointment Booking plugin (see README)."
+  },
+  {
+    "key": "group_catp_product",
+    "title": "Product Details",
+    "fields": [
+      {
+        "key": "field_catp_product_size",
+        "label": "Size",
+        "name": "product_size",
+        "type": "text",
+        "instructions": "e.g. 8x10, 11x14. Leave blank for products with no size (e.g. Pullover). Matches `product.size`.",
+        "required": 0,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "8x10",
+        "prepend": "",
+        "append": "",
+        "maxlength": ""
+      },
+      {
+        "key": "field_catp_product_price",
+        "label": "Price",
+        "name": "product_price",
+        "type": "number",
+        "instructions": "USD. Matches `product.price`.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "0.50",
+        "prepend": "$",
+        "append": "",
+        "min": 0,
+        "max": "",
+        "step": "0.01"
+      },
+      {
+        "key": "field_catp_product_category",
+        "label": "Category",
+        "name": "product_category",
+        "type": "select",
+        "instructions": "Matches the `product.category` ENUM in database/schema.sql — do not add new options here without also updating the schema and the Goods form.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "choices": {
+          "print_material": "Print Material",
+          "merch": "Merch"
+        },
+        "default_value": "print_material",
+        "allow_null": 0,
+        "multiple": 0,
+        "ui": 1,
+        "return_format": "value"
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "product" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Post Title = the product's name (e.g. \"Photo paper\", \"Pullover\")."
+  },
+  {
+    "key": "group_catp_event",
+    "title": "Event Details",
+    "fields": [
+      {
+        "key": "field_catp_event_date",
+        "label": "Event Date",
+        "name": "event_date",
+        "type": "date_picker",
+        "instructions": "Matches `event.date` in database/schema.sql.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "display_format": "F j, Y",
+        "return_format": "Y-m-d",
+        "first_day": 0
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "event" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Post Title = the event's name. Post Content (the normal WordPress editor below the title) = the event's description — no separate ACF field needed for that."
+  },
+  {
+    "key": "group_catp_photographer",
+    "title": "Photographer Details",
+    "fields": [
+      {
+        "key": "field_catp_photographer_student_id",
+        "label": "Student ID",
+        "name": "photographer_student_id",
+        "type": "text",
+        "instructions": "The student ID of the student who holds the photographer role. Matches `photographer.student_id` in database/schema.sql. Set the Post Title to this same ID.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "S001",
+        "prepend": "",
+        "append": "",
+        "maxlength": ""
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "photographer" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Not every student is a photographer — only create a post here for students who hold that role. How a student earns this role is still an open decision (see README)."
+  },
+  {
+    "key": "group_catp_peer_tutor",
+    "title": "Peer Tutor Details",
+    "fields": [
+      {
+        "key": "field_catp_peer_tutor_student_id",
+        "label": "Student ID",
+        "name": "peer_tutor_student_id",
+        "type": "text",
+        "instructions": "The tutor's student ID. Matches `peer_tutor.student_id` in database/schema.sql.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "S001",
+        "prepend": "",
+        "append": "",
+        "maxlength": ""
+      },
+      {
+        "key": "field_catp_peer_tutor_subject",
+        "label": "Subject",
+        "name": "peer_tutor_subject",
+        "type": "post_object",
+        "instructions": "The subject this student tutors. Matches `peer_tutor.subject_id`. The classroom shown for this tutor comes from the subject's own Classroom field — don't set one here separately.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "post_type": ["subject"],
+        "taxonomy": [],
+        "allow_null": 0,
+        "multiple": 0,
+        "return_format": "id",
+        "ui": 1
+      },
+      {
+        "key": "field_catp_peer_tutor_availability",
+        "label": "Availability",
+        "name": "peer_tutor_availability",
+        "type": "text",
+        "instructions": "Free text, e.g. \"Mon/Wed 2-4pm\". Matches `peer_tutor.availability`.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "Mon/Wed 2-4pm",
+        "prepend": "",
+        "append": "",
+        "maxlength": ""
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "peer_tutor" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Post Title = the tutor's display name, typed in by the admin/teacher (the Volunteer Form submission that started this only carries the student's ID, never a name). Only create a post here once the request has been reviewed and approved — a post existing here IS the approval; there's no separate status field."
+  }
+]
