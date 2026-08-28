@@ -27,8 +27,11 @@
 --     there are no user accounts/logins — it exists so every FK in this
 --     file has something to reference. Extend it later if the app needs
 --     to store anything beyond the bare ID (it currently does not).
---   - `photographer`: spec only defines `photographer_id`. No name/email
---     column is specified yet; add one when that's decided.
+--   - `photographer` is a role, not a separate person: a photographer is
+--     always a student (though not every student is a photographer), so
+--     `photographer` is a subtype table keyed directly on `student_id`
+--     (no separate surrogate `photographer_id`). This mirrors the
+--     `peer_tutor` pattern (also a student in a special role).
 --   - Envelope-per-submission and other Goods pricing rules are business
 --     logic, not schema — enforced in the ordering UI/plugin, not here.
 -- =====================================================================
@@ -58,12 +61,7 @@ CREATE TABLE IF NOT EXISTS `location` (
 CREATE TABLE IF NOT EXISTS `teacher` (
   `teacher_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(150) NOT NULL,
-  `location_id` INT UNSIGNED NULL,
-  PRIMARY KEY (`teacher_id`),
-  KEY `idx_teacher_location` (`location_id`),
-  CONSTRAINT `fk_teacher_location`
-    FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`)
-    ON DELETE SET NULL ON UPDATE CASCADE
+  PRIMARY KEY (`teacher_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `subject` (
@@ -72,10 +70,19 @@ CREATE TABLE IF NOT EXISTS `subject` (
   `teacher_id` INT UNSIGNED NOT NULL,
   -- The subject determines the teacher; teacher_id is intentionally
   -- never duplicated onto tutoring_booking rows (see relationships).
+  `location_id` INT UNSIGNED NOT NULL,
+  -- The classroom belongs to the class (subject), not the teacher. This
+  -- is what lets a peer tutor inherit a classroom too: peer_tutor is
+  -- assigned a subject_id, and that subject already carries its room —
+  -- no separate location needs to be assigned to the peer tutor.
   PRIMARY KEY (`subject_id`),
   KEY `idx_subject_teacher` (`teacher_id`),
+  KEY `idx_subject_location` (`location_id`),
   CONSTRAINT `fk_subject_teacher`
     FOREIGN KEY (`teacher_id`) REFERENCES `teacher` (`teacher_id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_subject_location`
+    FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -110,9 +117,15 @@ CREATE TABLE IF NOT EXISTS `event` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `photographer` (
-  `photographer_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  -- Spec defines no other fields yet (name/contact TBD).
-  PRIMARY KEY (`photographer_id`)
+  `student_id` VARCHAR(20) NOT NULL,
+  -- A photographer IS a student (not every student is a photographer),
+  -- so this table has no independent surrogate key — it's the subset of
+  -- `student` rows that also hold the photographer role.
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`student_id`),
+  CONSTRAINT `fk_photographer_student`
+    FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `studio_gear` (
@@ -268,7 +281,10 @@ CREATE TABLE IF NOT EXISTS `photo_session_request` (
   `request_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `student_id` VARCHAR(20) NOT NULL,
   -- Always the responsible student, even when the guest is the subject.
-  `photographer_id` INT UNSIGNED NULL,
+  `photographer_student_id` VARCHAR(20) NULL,
+  -- The student acting as photographer for this session (references the
+  -- `photographer` subtype, not `student` directly, so only students who
+  -- hold the photographer role can be assigned here).
   `date_requested` DATE NOT NULL,
   `session_type` ENUM('model', 'photographer') NOT NULL,
   -- 'model' = student requests to be photographed;
@@ -279,12 +295,12 @@ CREATE TABLE IF NOT EXISTS `photo_session_request` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`request_id`),
   KEY `idx_photo_session_request_student` (`student_id`),
-  KEY `idx_photo_session_request_photographer` (`photographer_id`),
+  KEY `idx_photo_session_request_photographer` (`photographer_student_id`),
   CONSTRAINT `fk_photo_session_request_student`
     FOREIGN KEY (`student_id`) REFERENCES `student` (`student_id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_photo_session_request_photographer`
-    FOREIGN KEY (`photographer_id`) REFERENCES `photographer` (`photographer_id`)
+    FOREIGN KEY (`photographer_student_id`) REFERENCES `photographer` (`student_id`)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
