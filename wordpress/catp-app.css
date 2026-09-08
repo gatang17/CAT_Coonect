@@ -1,726 +1,724 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap');
+
 /* ==========================================================================
    CATP Connect — app stylesheet
    --------------------------------------------------------------------------
-   WHERE THIS GOES
-   Paste this whole file into  Appearance → Customize → Additional CSS.
-   It is NOT loaded by the plugin (since v0.4.0 the plugin ships no CSS), so
-   a designer can change any colour here without ever opening a code file.
-   Keep this repo copy in sync with what is pasted on the live site.
+   A translation of the v0 prototype's globals.css into classes you apply from
+   the WordPress editor. Values (sizes, spacing, colours, breakpoints) are the
+   prototype's own, not approximations.
 
-   Trade-off to know about: Additional CSS does not load inside the block
-   editor, so pages look plain while editing and correct on the front end.
+   WHERE THIS GOES
+   Paste the whole file into  Appearance → Customize → Additional CSS.
+   The plugin ships no CSS (since v0.4.0), so a designer changes any colour
+   here without opening a code file. The @import must stay on line 1.
+
+   Trade-off: Additional CSS does not load inside the block editor, so pages
+   look plain while editing and correct on the front end.
 
    HOW IT IS USED
-   Every rule is a REUSABLE CLASS. You apply it to a block in the editor
-   under  Block → Advanced → "Additional CSS class(es)".  Nothing here is
-   tied to one page, so a new page built later reuses the same vocabulary.
-   Rules under `.catp-app` (a body class the plugin adds to the app pages)
-   style plain headings/paragraphs/buttons with no class needed.
+   Apply a class to a block under  Block → Advanced → Additional CSS class(es).
+   Rules under `.catp-app` (a body class the plugin adds) style plain
+   headings, paragraphs and buttons with no class needed.
 
-   THE MAP — every class in this file
-     Shell     catp-appnav · catp-brand · catp-page-header · catp-page
-     Tabs      catp-tabs · catp-tabs--sub · catp-tabs--pill
-     Content   catp-section · catp-card · catp-badge · catp-list
-     App       catp-notification · catp-event · catp-chip · catp-calendar
-               catp-form · catp-field · catp-directory · catp-rank
-               catp-chat · catp-search
-     Text      catp-eyebrow · catp-sub · catp-note
+   WHICH CLASS REPLACES WHICH PROTOTYPE CLASS
+     .app-shell        -> body.catp-app      .view            -> catp-page
+     .desktop-sidebar
+      + .bottom-nav    -> catp-appnav        .brand-mark      -> catp-brand
+     .page-header      -> catp-page-header   .header-icon     -> catp-header-icon
+     .home-top-tabs    -> catp-tabs--folder  .category-tabs   -> catp-tabs--segment
+     .inner-tabs       -> catp-tabs--sub     .section-heading -> catp-section
+     .notification     -> catp-notification  .event-card      -> catp-event
+     .teacher-chip     -> catp-chip          .calendar        -> catp-calendar
+     .slot-grid        -> catp-slots         .check-row       -> catp-check
+     .resource-panel
+      + .form-card     -> catp-form          .form-row        -> catp-field-row
+     .intent-selector  -> catp-choice        .primary-button  -> catp-cta
+     .wide-accent      -> catp-cta--wide     .search-box      -> catp-search
+     .directory-row    -> catp-directory-row .leader-row      -> catp-rank
+     .kit-row          -> catp-kit-row       .quantity-control-> catp-qty
+     .chat-bubble      -> catp-bubble        .faq-suggestions -> catp-faq
+     .help-composer    -> catp-composer      .gallery-grid    -> catp-gallery
+     .progress         -> catp-progress      .status-badge    -> catp-status
+
+   The prototype renders TWO nav elements and hides one per breakpoint. Here
+   it is one block (`catp-appnav`) restyled at the breakpoint, because in
+   WordPress that means one synced pattern instead of two to keep in step.
+
+   NOTE ON COLOUR: the prototype's globals.css declares its palette and then
+   declares a SECOND `:root` under "Wireframe mode" that overrides all of it.
+   Same specificity, later in the file — so the black-and-white wireframe is
+   what actually renders today; the olive/lime design is currently dead code.
+   Both are here. Section 9 is that wireframe override, and deleting it turns
+   the colour design back on.
    ========================================================================== */
 
-/* 1. TOKENS — change these first --------------------------------------- */
+/* 1. TOKENS — the prototype's palette --------------------------------------- */
 :root {
-  --catp-ink:        #111111;   /* text */
-  --catp-ink-soft:   #555555;   /* secondary text */
-  --catp-ink-mute:   #8a8a8a;   /* labels, hints */
-  --catp-paper:      #ffffff;   /* page background */
-  --catp-line:       #bdbdbd;   /* wireframe borders (neutral on purpose) */
-  --catp-accent:     #111111;   /* set the brand color here when you have one */
-
-  --catp-font:       system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --catp-mono:       ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-
-  --catp-border:     1px;       /* thickness of every border */
-  --catp-radius:     2px;       /* corner radius of cards and buttons */
-  --catp-gap:        12px;      /* space between cards */
-  --catp-pad:        20px;      /* padding inside cards */
-  --catp-maxw:       720px;     /* content column width (phone-like) */
-  --catp-nav-w:      232px;     /* width of the desktop navigation column */
+  color-scheme: light;
+  --catp-background:         #f4f5f2;
+  --catp-foreground:         #1c2421;
+  --catp-card:               #ffffff;
+  --catp-primary:            #1c2421;
+  --catp-primary-foreground: #f8f9f6;
+  --catp-muted-foreground:   #68746e;
+  --catp-accent:             #b8d93d;
+  --catp-accent-foreground:  #1c2421;
+  --catp-border:             #dfe5df;
+  --catp-input:              #e5eae5;
+  --catp-ring:               #a5c52e;
+  --catp-radius:             0.9rem;
+  --catp-font:               'DM Sans', Arial, sans-serif;
+  --catp-mono:               'IBM Plex Mono', monospace;
+  /* layout */
+  --catp-maxw:               760px;   /* the phone-width column */
+  --catp-maxw-lg:            1120px;  /* the same column on a desktop */
+  --catp-nav-w:              228px;   /* the sidebar */
+  --catp-nav-pad:            268px;   /* how far the page clears it */
 }
 
-/* 2. BASE — plain elements inside app pages, no classes needed ----------- */
-:is(.catp-app, .editor-styles-wrapper) { background: var(--catp-paper); color: var(--catp-ink); font-family: var(--catp-font); }
-
-:is(.catp-app, .editor-styles-wrapper) h1, :is(.catp-app, .editor-styles-wrapper) h2, :is(.catp-app, .editor-styles-wrapper) h3, :is(.catp-app, .editor-styles-wrapper) h4 {
+/* 2. BASE ------------------------------------------------------------------- */
+.catp-app {
+  min-height: 100vh;
+  padding-bottom: 96px;              /* clears the phone nav bar */
+  background: var(--catp-background);
+  color: var(--catp-foreground);
   font-family: var(--catp-font);
-  font-weight: 400;
-  letter-spacing: -.02em;
-  line-height: 1.15;
-  color: var(--catp-ink);
-  margin-top: 0;
 }
-:is(.catp-app, .editor-styles-wrapper) h1 { font-size: clamp(32px, 6vw, 42px); margin-bottom: 8px; }
-:is(.catp-app, .editor-styles-wrapper) h2 { font-size: 24px; margin-bottom: 16px; }
-:is(.catp-app, .editor-styles-wrapper) h3 { font-size: 16px; margin-bottom: 6px; }
-:is(.catp-app, .editor-styles-wrapper) h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.catp-app * { border-color: var(--catp-border); }
+.catp-app button, .catp-app input, .catp-app select, .catp-app textarea { font: inherit; }
+.catp-app button:disabled { cursor: not-allowed; opacity: .45; }
 
-:is(.catp-app, .editor-styles-wrapper) p { font-size: 15px; line-height: 1.55; color: var(--catp-ink); }
-:is(.catp-app, .editor-styles-wrapper) a { color: inherit; }
+.catp-app h1, .catp-app h2, .catp-app h3 { font-family: var(--catp-font); margin-top: 0; }
+.catp-app h1 { margin: 5px 0 6px; font-size: clamp(28px, 6vw, 38px); font-weight: 800; line-height: 1.05; letter-spacing: -.055em; }
+.catp-app h2 { margin: 5px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.045em; }
+.catp-app h3 { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em; }
+.catp-app p  { font-size: 14px; line-height: 1.5; }
+.catp-app a  { color: inherit; }
 
-/* every core button in an app page: full width, outlined (wireframe) */
-:is(.catp-app, .editor-styles-wrapper) .wp-block-button__link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  background: transparent;
-  color: var(--catp-ink);
-  border: var(--catp-border) solid var(--catp-ink);
-  border-radius: var(--catp-radius);
-  font-family: var(--catp-font);
-  font-weight: 700;
-  font-size: 15px;
-  padding: 14px 20px;
-  text-decoration: none;
-}
-:is(.catp-app, .editor-styles-wrapper) .wp-block-buttons .wp-block-button { width: 100%; margin: 0 0 var(--catp-gap); }
+/* the centered column every page lives in */
+.catp-page { width: min(100%, var(--catp-maxw)); margin: 0 auto; padding: 28px 22px 26px; }
 
-/* 3. TEXT ROLES ------------------------------------------------------------ */
-.catp-eyebrow,                       /* small uppercase label above a title */
-:is(.catp-app, .editor-styles-wrapper) .is-style-catp-eyebrow {
+/* 3. TEXT ROLES ------------------------------------------------------------- */
+.catp-eyebrow, .catp-app .is-style-catp-eyebrow {
+  margin: 0;
+  color: #77827b;
   font-family: var(--catp-mono);
   font-size: 10px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--catp-ink-mute);
-  line-height: 1.4;
-  margin: 0 0 6px;
+  font-weight: 600;
+  letter-spacing: .12em;
 }
-.catp-sub { color: var(--catp-ink-soft); margin: 0 0 36px; }   /* subtitle under an h1 */
-.catp-note, :is(.catp-app, .editor-styles-wrapper) .is-style-catp-note {                    /* setup notes / hints */
-  font-size: 12.5px;
-  color: var(--catp-ink-mute);
-  font-style: italic;
+.catp-sub { margin: 0; color: var(--catp-muted-foreground); font-size: 14px; line-height: 1.5; }
+.catp-note, .catp-app .is-style-catp-note { font-size: 12.5px; color: var(--catp-muted-foreground); font-style: italic; }
+.catp-app .catp-text-button {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 0; background: transparent;
+  color: #66725e; font-size: 12px; font-weight: 700;
 }
 
-/* 4. STRUCTURE ------------------------------------------------------------- */
-
-/* Don't inherit the theme's text alignment — these components are left-aligned
-   by design. (Change it here once if the design calls for something else.) */
-.catp-section, .catp-card, .catp-tab, .catp-page { text-align: left; }
-
-/* Themes with a "constrained" layout (Blocksy, Twenty Twenty-*) cap the width
-   of every child block and center it with `margin-inline: auto`. Inside these
-   components we lay things out ourselves, so opt those children out — without
-   this, labels and titles float in the middle of their card. */
-/* The doubled class raises specificity on purpose: WordPress prints its
-   layout CSS *after* this file, so an equal-specificity rule would lose. */
+/* Themes with a "constrained" layout cap every child block's width and
+   centre it. Inside these components we lay things out ourselves, so opt
+   those children out. The doubled class raises specificity on purpose:
+   WordPress prints its layout CSS after this file. */
 .catp-section.catp-section > *,
 .catp-section-row.catp-section-row > *,
 .catp-card.catp-card > *,
+.catp-form.catp-form > *,
 .catp-badge.catp-badge > * {
   max-width: none !important;
   margin-inline: 0 !important;
   width: auto;
 }
 
-/* section header: an eyebrow label, then a row with the title and an
-   optional "See all" link pushed to the right. Plain block + flex row —
-   no grid, so themes that cap child widths can't distort it. */
-.catp-section, :is(.catp-app, .editor-styles-wrapper) .is-style-catp-section {
-  margin: 40px 0 16px;
-}
-.catp-section > .catp-eyebrow { margin-bottom: 4px; }
-.catp-section-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-}
-.catp-section-row > h2 { margin: 0; flex: 1 1 auto; }
-.catp-section-row > p {            /* the "See all →" link */
-  flex: 0 0 auto;
-  font-size: 12px;
-  font-weight: 700;
-  margin: 0;
-  white-space: nowrap;
-}
-
-/* one tab-to-be: a group with a heading at the top */
-.catp-tab > h2 { margin: 40px 0 16px; }
-.catp-tab > h3 { margin-top: 28px; }
-
-/* card: bordered box, arrow on the right */
-.catp-card, :is(.catp-app, .editor-styles-wrapper) .is-style-catp-card {
-  position: relative;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  padding: var(--catp-pad) 52px var(--catp-pad) var(--catp-pad);
-  margin: 0 0 var(--catp-gap);
-}
-.catp-card::after, :is(.catp-app, .editor-styles-wrapper) .is-style-catp-card::after {
-  content: "\2192";
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 20px;
-  line-height: 1;
-  color: var(--catp-ink);
-}
-.catp-card .wp-block-post-title, .catp-card h3 { margin: 0 0 6px; }
-.catp-card .wp-block-post-title a { text-decoration: none; }
-.catp-card .wp-block-post-excerpt p, .catp-card p { font-size: 12.5px; color: var(--catp-ink-soft); margin: 0; }
-.catp-card .wp-block-post-excerpt__more-text { display: none; }
-.catp-card .wp-block-post-featured-image { margin: 0 0 10px; }
-.catp-card .wp-block-post-featured-image img { width: 100%; height: auto; display: block; }
-
-/* event card: big date on the left */
-.catp-card--event { display: grid; grid-template-columns: 44px 1fr; column-gap: 16px; align-content: start; }
-.catp-card--event > *:not(.catp-badge) { grid-column: 2; }
-.catp-badge { grid-row: 1 / span 3; text-align: center; }
-.catp-badge .wp-block-post-date { display: block; margin: 0; font-family: var(--catp-mono); }
-.catp-badge .catp-badge-month { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--catp-ink-mute); }
-.catp-badge .catp-badge-day   { font-size: 20px; font-weight: 700; line-height: 1.1; }
-
-/* lists made with the core Query Loop block */
-.catp-list .wp-block-post-template { list-style: none; margin: 0; padding: 0; display: block; }
-.catp-list .wp-block-post-template > li { margin: 0; }
-
-
-/* 5. APP SHELL — the fixed navigation and the page header ------------------
-   The nav is ONE block you build once and reuse: make a Group, put five
-   links in it (Home · Resources · Get Involved · Help · More), give the
-   Group the class `catp-appnav`, then save it as a synced pattern and drop
-   that pattern on every app page. Icons are optional — paste inline SVG in
-   a Custom HTML block inside each link, or leave text only.
-
-   Desktop: a fixed rail down the left.   Phone: a fixed bar along the bottom.
-   Same markup, one media query. `.catp-app` gets matching padding so the
-   content never hides behind it.
-   -------------------------------------------------------------------------- */
-
+/* 4. APP SHELL -------------------------------------------------------------- */
+/* One block, two layouts. Build it once as a synced pattern: five links,
+   each an icon plus a label, and the class `catp-appnav`. */
 .catp-appnav {
   position: fixed;
-  z-index: 9999;
-  background: var(--catp-paper);
-  display: flex;
-  margin: 0;
+  z-index: 10;
+  right: 0; bottom: 0; left: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  width: min(100%, var(--catp-maxw));
+  margin: 0 auto;
+  padding: 11px 12px max(11px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--catp-border);
+  background: #fafbf8ee;
+  backdrop-filter: blur(15px);
 }
-/* the links, however they are nested (plain <a>, a WP menu's li>a, buttons) */
-.catp-appnav a,
-.catp-appnav .wp-block-button__link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex: 1 1 0;
-  padding: 10px 4px;
+.catp-appnav a, .catp-appnav .wp-block-button__link {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
   border: 0;
-  background: none;
-  width: auto;
+  background: transparent;
+  color: #8b968e;
   font-size: 10px;
-  font-weight: 500;
-  line-height: 1.2;
-  text-align: center;
-  text-decoration: none;
-  color: var(--catp-ink-mute);
-}
-.catp-appnav ul { display: flex; flex: 1 1 auto; list-style: none; margin: 0; padding: 0; }
-.catp-appnav li { display: flex; flex: 1 1 0; margin: 0; }
-.catp-appnav svg { width: 19px; height: 19px; stroke-width: 1.8; }
-
-/* the page you are on: WordPress adds `current-menu-item` to a menu item;
-   `aria-current` covers a hand-built nav. Both get the same emphasis. */
-.catp-appnav .current-menu-item > a,
-.catp-appnav [aria-current="page"] {
-  color: var(--catp-ink);
   font-weight: 700;
+  text-decoration: none;
 }
-.catp-appnav .current-menu-item > a svg,
-.catp-appnav [aria-current="page"] svg { stroke-width: 2.5; }
+.catp-appnav ul { display: contents; list-style: none; margin: 0; padding: 0; }
+.catp-appnav li { display: contents; }
+.catp-appnav svg { width: 19px; height: 19px; }
+.catp-appnav .catp-brand { display: none; }
+/* the page you are on: WordPress marks a menu item `current-menu-item`;
+   `aria-current` covers a hand-built nav */
+.catp-appnav .current-menu-item > a, .catp-appnav [aria-current="page"] { color: var(--catp-foreground); }
+.catp-appnav .current-menu-item > a svg, .catp-appnav [aria-current="page"] svg { color: #86a51d; stroke-width: 2.5; }
 
-/* PHONE — bar along the bottom */
-@media (max-width: 899px) {
-  .catp-appnav {
-    left: 0; right: 0; bottom: 0;
-    border-top: var(--catp-border) solid var(--catp-line);
-  }
-  .catp-app { padding-bottom: 84px; }
+@media (min-width: 760px) {
+  .catp-page { padding-top: 42px; }
+  .catp-appnav { border: 1px solid var(--catp-border); border-bottom: 0; border-radius: 16px 16px 0 0; }
 }
 
-/* DESKTOP — a column of boxed buttons down the left. Each one is a bordered
-   card with the icon beside the label, and the page you are on is filled
-   solid. Wider than a phone rail because the labels are read, not guessed. */
-@media (min-width: 900px) {
+/* DESKTOP — the bar becomes a rail of boxed buttons down the left */
+@media (min-width: 1024px) {
+  .catp-app { padding: 0 40px 0 var(--catp-nav-pad); }
   .catp-appnav {
-    top: 0; bottom: 0; left: 0;
-    width: var(--catp-nav-w);
+    top: 0; bottom: 0; left: 0; right: auto;
+    display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 28px 20px;
-    border-right: 0;
+    gap: 8px;
+    width: var(--catp-nav-w);
+    margin: 0;
+    padding: 38px 24px;
+    border: 0;
+    border-right: 1.5px solid #000;
+    border-radius: 0;
+    background: #fff;
+    backdrop-filter: none;
     overflow-y: auto;
   }
-  .catp-appnav ul { flex-direction: column; flex: 0 0 auto; width: 100%; gap: 10px; }
-  .catp-appnav li { flex: 0 0 auto; }
-  .catp-appnav a,
-  .catp-appnav .wp-block-button__link {
-    flex: 0 0 auto;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 14px;
-    padding: 16px 18px;
-    border: var(--catp-border) solid var(--catp-line);
-    border-radius: var(--catp-radius);
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--catp-ink);
+  .catp-appnav ul { display: grid; gap: 8px; }
+  .catp-appnav li { display: block; }
+  .catp-appnav a, .catp-appnav .wp-block-button__link {
+    display: flex;
+    align-items: center;
+    justify-items: initial;
+    gap: 13px;
+    width: 100%;
+    padding: 13px 12px;
+    border: 1.5px solid transparent;
+    background: #fff;
+    color: #000;
     text-align: left;
+    font-size: 12px;
+    font-weight: 700;
   }
-  .catp-appnav a:hover { border-color: var(--catp-ink); }
-  /* the current page: filled, so it reads at a glance */
-  .catp-appnav .current-menu-item > a,
-  .catp-appnav [aria-current="page"] {
-    background: var(--catp-ink);
-    border-color: var(--catp-ink);
-    color: var(--catp-paper);
-  }
-  .catp-appnav svg { width: 20px; height: 20px; }
-  .catp-app { padding-left: var(--catp-nav-w); }
+  .catp-appnav a:hover { border-color: #000; }
+  .catp-appnav .current-menu-item > a, .catp-appnav [aria-current="page"] { border-color: #000; background: #000; color: #fff; }
+  .catp-appnav .current-menu-item > a svg, .catp-appnav [aria-current="page"] svg { color: inherit; }
+  /* the wordmark sits at the top of the rail, 42px above the links */
+  .catp-appnav .catp-brand { display: block; margin-bottom: 34px; font-size: 20px; }
+  .catp-appnav .catp-brand span { color: #000; }
+  .catp-page { width: min(100%, var(--catp-maxw-lg)); padding: 46px 0 64px; }
+}
+@media (min-width: 1440px) {
+  .catp-app { padding-left: 300px; padding-right: 72px; }
+  .catp-appnav { width: 260px; padding-inline: 30px; }
+  .catp-page { width: min(100%, 1180px); }
 }
 
-/* The wordmark. Put it on a Paragraph or Heading: "CATP+" — wrap the "+" in
-   a <span> (Rich text → inline code off; just type it in the HTML view) to
-   tint it with the accent colour. */
-.catp-brand {
-  font-family: var(--catp-mono);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -.02em;
-  color: var(--catp-ink);
-  margin: 0;
-}
-.catp-brand span { color: var(--catp-accent); }
-.catp-appnav .catp-brand { margin: 0 0 20px; display: none; }
-@media (min-width: 900px) { .catp-appnav .catp-brand { display: block; text-align: center; } }
+/* the wordmark */
+.catp-brand { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -.08em; }
+.catp-brand span { color: #9dbd25; }
 
-/* Page header: the wordmark, a title + one line of subtitle, and an icon
-   pushed to the right. Group with class `catp-page-header`, containing the
-   brand paragraph, a Group with h1+p, and the icon. */
+/* page header: wordmark · title + subtitle · icon */
 .catp-page-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: nowrap;
-  margin: 0 0 28px;
-  padding-top: 20px;
-}
-.catp-page-header > .catp-brand { flex: 0 0 auto; align-self: center; margin-right: 4px; }
-.catp-page-header h1 { margin: 0 0 4px; }
-.catp-page-header p  { margin: 0; color: var(--catp-ink-soft); font-size: 14px; }
-.catp-page-header .catp-page-header-copy { flex: 1 1 auto; min-width: 0; }
-.catp-page-header .catp-header-icon {
-  flex: 0 0 auto;
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: 999px;
-}
-
-/* 6. TABS — the whole point: sections side by side instead of one long scroll
-   --------------------------------------------------------------------------
-   The MARKUP and the click behaviour come from the Stackable → Tabs block
-   (CSS alone cannot switch panels). This file only restyles it.
-
-   Put `catp-tabs` on the Tabs block for a page's main tabs, and
-   `catp-tabs catp-tabs--sub` on a nested Tabs block for the second level.
-   Add `catp-tabs--pill` for the rounded style used on Home.
-
-   These rules target the ARIA roles (`[role="tablist"]`, `[role="tab"]`,
-   `[aria-selected]`) that any accessible tabs block emits — not Stackable's
-   internal class names — so a Stackable update, or swapping it for another
-   tabs block later, will not break the design.
-   -------------------------------------------------------------------------- */
-
-.catp-tabs [role="tablist"],
-.catp-tabs .catp-tablist {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin: 0 0 24px;
-  padding: 0 0 2px;
-  border-bottom: var(--catp-border) solid var(--catp-line);
-  list-style: none;
-}
-.catp-tabs [role="tab"],
-.catp-tabs .catp-tablist > * > a,
-.catp-tabs .catp-tablist button {
-  appearance: none;
-  background: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  padding: 8px 0;
-  margin: 0;
-  font-family: var(--catp-font);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
-  color: var(--catp-ink-mute);
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color .15s ease, border-color .15s ease;
-}
-.catp-tabs [role="tab"]:hover { color: var(--catp-ink); }
-.catp-tabs [role="tab"][aria-selected="true"],
-.catp-tabs [role="tab"].is-active,
-.catp-tabs .catp-tablist .is-active {
-  color: var(--catp-ink);
-  font-weight: 700;
-  border-bottom-color: var(--catp-accent);
-}
-.catp-tabs [role="tabpanel"] { padding: 0; }
-/* a tab panel's first heading already has the tab's name — don't repeat the
-   big top margin the standalone version needs */
-.catp-tabs [role="tabpanel"] > *:first-child { margin-top: 0; }
-
-/* SEGMENTED — the top level on Resources: two or three equal halves filling
-   the width, the active one solid. Add `catp-tabs--segment` to the Tabs block.
-   This is a different job from the underlined strip: it switches between
-   whole modes of a page, so it is meant to be impossible to miss. */
-.catp-tabs--segment [role="tablist"],
-.catp-tabs--segment .catp-tablist {
-  gap: 0;
-  padding: 0;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-.catp-tabs--segment [role="tab"] {
-  flex: 1 1 0;
-  justify-content: center;
-  text-align: center;
-  padding: 15px 12px;
-  border-bottom: 0;
-  border-radius: 0;
-  font-weight: 500;
-  font-size: 14px;
-}
-.catp-tabs--segment [role="tab"] + [role="tab"] { border-left: var(--catp-border) solid var(--catp-line); }
-.catp-tabs--segment [role="tab"][aria-selected="true"] {
-  background: var(--catp-ink);
-  color: var(--catp-paper);
-  font-weight: 600;
-}
-
-/* SECOND LEVEL — smaller, no rule under it, sits closer to its parent */
-.catp-tabs--sub [role="tablist"],
-.catp-tabs--sub .catp-tablist {
-  gap: 4px;
-  border-bottom: var(--catp-border) solid var(--catp-line);
-  margin: 14px 0 22px;
-  padding: 0;
-}
-.catp-tabs--sub [role="tab"] {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-bottom: 0;
-  border-radius: var(--catp-radius) var(--catp-radius) 0 0;
-}
-/* the active sub-tab is filled rather than underlined, so the two levels
-   never look like the same control at different sizes */
-.catp-tabs--sub [role="tab"][aria-selected="true"] {
-  background: var(--catp-ink);
-  color: var(--catp-paper);
-  border-bottom-color: transparent;
-}
-
-/* PILL STYLE — for the Updates / Drop Zone switch on Home */
-.catp-tabs--pill [role="tablist"],
-.catp-tabs--pill .catp-tablist {
-  gap: 6px;
-  border-bottom: 0;
-  padding: 4px;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: 999px;
-  display: inline-flex;
-}
-.catp-tabs--pill [role="tab"] {
-  border-bottom: 0;
-  border-radius: 999px;
-  padding: 8px 18px;
-}
-.catp-tabs--pill [role="tab"][aria-selected="true"] {
-  background: var(--catp-ink);
-  color: var(--catp-paper);
-}
-
-/* Tabs are wider than a phone: let the strip scroll sideways rather than
-   wrap onto three lines and push the content down. */
-@media (max-width: 599px) {
-  .catp-tabs [role="tablist"] {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .catp-tabs [role="tablist"]::-webkit-scrollbar { display: none; }
-}
-
-/* 7. APP COMPONENTS -------------------------------------------------------- */
-
-/* NOTIFICATION — an update in the Home list. Add `catp-notification` to the
-   Group; add `catp-tint-mint` or `catp-tint-peach` for the coloured dot. */
-.catp-notification {
-  position: relative;
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  padding: var(--catp-pad);
-  margin: 0 0 var(--catp-gap);
-}
-.catp-notification .catp-dot {
-  flex: 0 0 auto;
-  width: 8px; height: 8px;
-  margin-top: 7px;
-  border-radius: 50%;
-  background: var(--catp-ink-mute);
-}
-.catp-tint-mint  .catp-dot { background: #5bbf9b; }
-.catp-tint-peach .catp-dot { background: #e39a72; }
-.catp-notification span   { display: block; font-family: var(--catp-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--catp-ink-mute); margin-bottom: 4px; }
-.catp-notification h3     { margin: 0 0 4px; }
-.catp-notification p      { font-size: 12.5px; color: var(--catp-ink-soft); margin: 0; }
-
-/* EVENT ROW — the date block on the left, label + title on the right.
-   `catp-event` on the Group; `catp-event-date` on the date Group. */
-.catp-event {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  padding: 14px var(--catp-pad);
-  margin: 0 0 var(--catp-gap);
-}
-.catp-event-date {
-  flex: 0 0 auto;
-  width: 44px;
-  text-align: center;
-  font-family: var(--catp-mono);
-}
-.catp-event-date p       { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--catp-ink-mute); margin: 0; }
-.catp-event-date strong  { display: block; font-size: 20px; line-height: 1.1; }
-.catp-event h3           { margin: 0; font-size: 15px; }
-.catp-event span         { font-family: var(--catp-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--catp-ink-mute); }
-
-/* CHIP — the "your tutor" confirmation card */
-.catp-chip {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border: var(--catp-border) solid var(--catp-ink);
-  border-radius: var(--catp-radius);
-  padding: 14px var(--catp-pad);
-  margin: 0 0 var(--catp-gap);
+  padding: 6px 0 33px;
 }
-.catp-chip strong { display: block; font-size: 15px; }
-.catp-chip small  { display: block; font-size: 12px; color: var(--catp-ink-soft); }
-
-/* CALENDAR — a month grid built from a 7-column Columns block, or from a
-   Custom HTML block. `catp-calendar` on the wrapper, `catp-days` on the grid. */
-.catp-calendar {
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  padding: 16px;
-  margin: 0 0 var(--catp-gap);
+.catp-page-header-copy { flex: 1; min-width: 0; }
+.catp-page-header h1 { margin-top: 4px; font-size: 30px; }
+.catp-page-header p  { margin: 0; color: var(--catp-muted-foreground); font-size: 14px; line-height: 1.5; }
+.catp-header-icon {
+  display: grid; place-items: center;
+  flex: none;
+  width: 35px; height: 35px;
+  border-radius: 11px;
+  background: #e7ebe5;
 }
-.catp-calendar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.catp-weekdays, .catp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.catp-weekdays span {
-  text-align: center;
-  font-family: var(--catp-mono);
-  font-size: 10px;
-  color: var(--catp-ink-mute);
-  padding-bottom: 6px;
-}
-.catp-days button {
-  position: relative;
-  aspect-ratio: 1;
-  display: flex; align-items: center; justify-content: center;
-  background: none;
-  border: var(--catp-border) solid transparent;
-  border-radius: var(--catp-radius);
-  font-family: var(--catp-mono);
-  font-size: 13px;
-  color: var(--catp-ink);
-  cursor: pointer;
-}
-.catp-days button[disabled] { color: var(--catp-line); cursor: default; }
-.catp-days button.is-available { border-color: var(--catp-line); }
-.catp-days button.is-available::after {
-  content: "";
-  position: absolute; bottom: 5px; left: 50%;
-  transform: translateX(-50%);
-  width: 4px; height: 4px;
-  border-radius: 50%;
+/* the big accent tile beside Home's greeting */
+.catp-spark {
+  display: grid; place-items: center;
+  flex: none;
+  width: 45px; height: 45px;
+  border-radius: 14px;
+  color: #4f6110;
   background: var(--catp-accent);
 }
-.catp-days button[aria-pressed="true"] { background: var(--catp-ink); color: var(--catp-paper); border-color: var(--catp-ink); }
+.catp-intro { display: flex; align-items: end; justify-content: space-between; padding: 36px 0 42px; }
 
-/* FORM — wraps a Forminator form so it matches everything else.
-   `catp-form` on the Group around the form; `catp-field-row` on a Columns
-   block to sit two fields side by side. */
-.catp-form {
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  padding: var(--catp-pad);
-  margin: 0 0 var(--catp-gap);
+/* 5. TABS ------------------------------------------------------------------- */
+/* The markup and the click behaviour come from the Stackable → Tabs block —
+   CSS alone cannot switch panels. These rules target the ARIA roles any
+   accessible tabs block emits, not Stackable's internal class names, so an
+   update or a swap later will not break the design.
+
+   Three looks, matching the prototype's three:
+     catp-tabs--folder    Home's Updates / Drop Zone   (a file-folder tab)
+     catp-tabs--segment   Resources' first level       (a boxed switch)
+     catp-tabs--sub       every second level           (underline / chip)   */
+
+.catp-tabs [role="tablist"] { list-style: none; margin: 0; padding: 0; }
+.catp-tabs [role="tab"] { appearance: none; cursor: pointer; text-decoration: none; }
+.catp-tabs [role="tabpanel"] > *:first-child { margin-top: 0; }
+
+/* FOLDER — Home */
+.catp-tabs--folder [role="tablist"] { display: flex; gap: 0; margin-bottom: 22px; border-bottom: 1.5px solid #000; }
+.catp-tabs--folder [role="tab"] {
+  padding: 10px 14px;
+  border: 1.5px solid transparent;
+  border-bottom: 0;
+  background: transparent;
+  color: var(--catp-muted-foreground);
+  font-size: 11px;
+  font-weight: 800;
 }
-.catp-form h3 { margin: 0 0 4px; }
-.catp-form .catp-note { margin: 0 0 18px; }
-.catp-form label,
-.catp-app .forminator-label {
-  display: block;
-  font-family: var(--catp-mono);
-  font-size: 10px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--catp-ink-mute);
-  margin: 0 0 6px;
+.catp-tabs--folder [role="tab"][aria-selected="true"] { border-color: #000; background: #fff; color: #000; }
+
+/* SEGMENT — Resources' Bookings / Materials & Equipment */
+.catp-tabs--segment [role="tablist"] {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--catp-border);
+  border-radius: 12px;
+  background: var(--catp-card);
 }
-.catp-form label em { text-transform: none; letter-spacing: 0; font-style: normal; float: right; color: var(--catp-ink-mute); }
+.catp-tabs--segment [role="tab"] {
+  padding: 10px 7px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #718078;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+.catp-tabs--segment [role="tab"][aria-selected="true"] {
+  background: var(--catp-primary);
+  color: var(--catp-primary-foreground);
+  box-shadow: 0 2px 7px #27332918;
+}
+
+/* SUB — the second level everywhere */
+.catp-tabs--sub [role="tablist"] {
+  display: flex;
+  gap: 18px;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--catp-border);
+  background: transparent;
+}
+.catp-tabs--sub [role="tab"] {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 6px 0 10px;
+  border: 0;
+  background: transparent;
+  color: #718078;
+  font-size: 11px;
+  font-weight: 700;
+}
+.catp-tabs--sub [role="tab"][aria-selected="true"] { color: var(--catp-foreground); }
+.catp-tabs--sub [role="tab"][aria-selected="true"]::after {
+  content: '';
+  position: absolute; right: 0; bottom: -1px; left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--catp-primary);
+}
+.catp-tabs--sub.catp-tabs--two [role="tab"] { font-size: 12px; }
+
+.catp-resource-groups { display: grid; gap: 12px; }
+@media (min-width: 1024px) {
+  .catp-tabs--sub [role="tablist"] { min-height: 42px; align-items: center; }
+}
+
+/* 6. CONTENT COMPONENTS ------------------------------------------------------ */
+
+/* section heading: eyebrow + title, with an optional action pushed right */
+.catp-section, .catp-app .is-style-catp-section {
+  display: flex; align-items: end; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.catp-app section, .catp-section-wrap { margin-top: 38px; }
+.catp-section-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; width: 100%; }
+
+/* notification and event rows */
+.catp-notification, .catp-event, .catp-card, .catp-app .is-style-catp-card {
+  display: flex; align-items: center; gap: 13px;
+  padding: 16px;
+  border: 1px solid var(--catp-border);
+  border-radius: 15px;
+  background: var(--catp-card);
+}
+.catp-notification-list, .catp-event-list, .catp-list .wp-block-post-template { display: grid; gap: 9px; list-style: none; margin: 0; padding: 0; }
+.catp-list .wp-block-post-template > li { margin: 0; }
+.catp-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #9dbd25; }
+.catp-tint-peach    .catp-dot { background: #e5a26b; }
+.catp-tint-lavender .catp-dot { background: #9a9ed0; }
+.catp-notification > div:nth-child(2), .catp-event-copy { min-width: 0; flex: 1; }
+.catp-notification span, .catp-event-copy > span {
+  color: #7b877e; font-family: var(--catp-mono); font-size: 9px; font-weight: 700; letter-spacing: .09em;
+}
+.catp-notification h3, .catp-event h3 {
+  overflow: hidden; margin: 5px 0 4px;
+  font-size: 14px; font-weight: 800; letter-spacing: -.015em;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.catp-notification p, .catp-event p { margin: 0; color: var(--catp-muted-foreground); font-size: 11px; line-height: 1.5; }
+
+.catp-event, .catp-card--event { align-items: flex-start; padding: 18px 16px; width: 100%; text-align: left; cursor: pointer; }
+.catp-event-date, .catp-badge {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 43px;
+  color: #87937e; font-family: var(--catp-mono); font-size: 10px; font-weight: 700;
+}
+.catp-event-date strong, .catp-badge .catp-badge-day { color: var(--catp-foreground); font-size: 18px; letter-spacing: -.06em; }
+.catp-event-copy h3 { margin-top: 6px; }
+
+/* buttons */
+.catp-app .wp-block-button__link, .catp-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 43px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--catp-primary);
+  color: var(--catp-primary-foreground);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.catp-app .catp-cta--wide .wp-block-button__link, .catp-cta--wide {
+  display: flex; gap: 9px;
+  width: 100%;
+  margin-top: 34px;
+  padding: 15px;
+  border-radius: 12px;
+  background: var(--catp-accent);
+  color: var(--catp-accent-foreground);
+  font-size: 13px;
+}
+.catp-app .catp-ctas .wp-block-button { width: 100%; }
+
+/* 7. FORMS AND PANELS -------------------------------------------------------- */
+.catp-form, .catp-app .is-style-catp-form {
+  display: grid; gap: 18px;
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid var(--catp-border);
+  border-radius: 18px;
+  background: var(--catp-card);
+}
+.catp-form > label, .catp-app .forminator-label {
+  display: grid; gap: 7px;
+  color: #5f6b64; font-size: 11px; font-weight: 700;
+}
+.catp-form em { margin-left: 4px; color: #ae6861; font-size: 9px; font-style: normal; font-weight: 500; }
 .catp-form input, .catp-form select, .catp-form textarea,
 .catp-app .forminator-input, .catp-app .forminator-select {
   width: 100%;
-  box-sizing: border-box;
-  background: transparent;
-  color: var(--catp-ink);
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  font-family: var(--catp-font);
-  font-size: 15px;
-  padding: 12px 14px;
-  margin: 0 0 16px;
-}
-.catp-form input:focus, .catp-form select:focus, .catp-form textarea:focus { outline: 2px solid var(--catp-accent); outline-offset: 1px; }
-.catp-field-row { display: flex; gap: 12px; }
-.catp-field-row > * { flex: 1 1 0; min-width: 0; }
-
-/* a segmented choice: two or three buttons that pick a mode */
-.catp-choice { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }
-.catp-choice button, .catp-choice .wp-block-button__link {
-  width: auto;
-  flex: 1 1 0;
-  padding: 10px 16px;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: 999px;
+  min-height: 43px;
+  padding: 0 12px;
+  border: 1px solid var(--catp-input);
+  border-radius: 9px;
+  outline: none;
+  background: #f7f9f6;
+  color: var(--catp-foreground);
   font-size: 13px;
-  font-weight: 500;
-  color: var(--catp-ink-soft);
-  background: none;
 }
-.catp-choice button[aria-pressed="true"], .catp-choice .is-active { background: var(--catp-ink); color: var(--catp-paper); border-color: var(--catp-ink); }
+.catp-form textarea { padding: 10px 12px; }
+.catp-form input:focus, .catp-form select:focus, .catp-form textarea:focus {
+  border-color: var(--catp-ring);
+  box-shadow: 0 0 0 3px #b8d93d33;
+}
+.catp-form h3 { margin: -9px 0 0; font-size: 21px; letter-spacing: -.045em; }
+.catp-form-description { margin: -10px 0 0; color: var(--catp-muted-foreground); font-size: 12px; line-height: 1.55; }
+.catp-field-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
-/* DIRECTORY — the teacher list on More */
-.catp-search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: 999px;
-  padding: 10px 16px;
-  margin: 0 0 24px;
+/* segmented choice (Event / Peer Tutoring) */
+.catp-choice { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 4px; border: 1.5px solid #000; }
+.catp-choice button, .catp-choice .wp-block-button__link {
+  min-height: 0; padding: 10px; border: 0; border-radius: 0;
+  background: #fff; color: #000; font-size: 11px; font-weight: 800;
 }
-.catp-search input { flex: 1 1 auto; border: 0; background: none; font-size: 14px; padding: 0; margin: 0; }
-.catp-search input:focus { outline: none; }
+.catp-choice button[aria-pressed="true"], .catp-choice .is-active { background: #000; color: #fff; }
 
-.catp-directory-group { margin: 0 0 28px; }
-.catp-directory-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  border-bottom: var(--catp-border) solid var(--catp-line);
-  background: none;
-  padding: 14px 0;
+/* chip */
+.catp-chip {
+  display: flex; align-items: center; justify-content: space-between; gap: 11px;
+  padding: 13px;
+  border-radius: 12px;
+  background: #f0f5e2;
 }
-.catp-directory-row strong { display: block; font-size: 15px; }
-.catp-directory-row span   { display: block; font-size: 12.5px; color: var(--catp-ink-soft); }
-.catp-directory-row .catp-room {
-  flex: 0 0 auto;
-  display: flex; align-items: center; gap: 4px;
-  font-family: var(--catp-mono);
+.catp-chip > div:first-child { display: grid; flex: 1; gap: 2px; }
+.catp-chip span, .catp-chip small { color: #78836f; font-family: var(--catp-mono); font-size: 9px; }
+.catp-chip strong { font-size: 12px; }
+
+/* calendar */
+.catp-calendar { padding: 15px; border: 1px solid var(--catp-border); border-radius: 13px; }
+.catp-calendar-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.catp-calendar-top strong { font-size: 13px; }
+.catp-calendar-arrows { display: flex; gap: 8px; }
+.catp-calendar-arrows button {
+  display: grid; place-items: center;
+  width: 25px; height: 25px;
+  border: 0; border-radius: 7px;
+  background: #f1f4ef; color: var(--catp-foreground);
+  font-size: 20px; line-height: 1;
+}
+.catp-weekdays, .catp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+.catp-weekdays { margin-top: 17px; color: #8b968d; font-family: var(--catp-mono); font-size: 9px; }
+.catp-days { margin-top: 8px; }
+.catp-days button {
+  position: relative;
+  min-height: 34px;
+  border: 0; border-radius: 8px;
+  background: transparent;
+  color: #aab3ad;
   font-size: 11px;
-  color: var(--catp-ink-mute);
-  white-space: nowrap;
 }
+.catp-days button.is-available { color: var(--catp-foreground); font-weight: 700; }
+.catp-days button[aria-pressed="true"] { background: var(--catp-primary); color: #fff; }
+.catp-days button i {
+  position: absolute; bottom: 4px; left: 50%;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: #a6c534;
+  transform: translateX(-50%);
+}
+.catp-days button[aria-pressed="true"] i { background: var(--catp-accent); }
 
-/* RANK ROW — the peer-tutor list */
-.catp-rank {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  border-bottom: var(--catp-border) solid var(--catp-line);
-  padding: 12px 0;
+/* time slots */
+.catp-slot-area { display: grid; gap: 11px; }
+.catp-slots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.catp-slots button {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 40px;
+  border: 1px solid var(--catp-border);
+  border-radius: 9px;
+  background: #f8faf7;
+  color: #66736a;
+  font-size: 11px; font-weight: 700;
 }
-.catp-rank span   { font-family: var(--catp-mono); font-size: 12px; color: var(--catp-ink-mute); }
-.catp-rank strong { flex: 1 1 auto; font-size: 14px; font-weight: 500; }
-.catp-rank small  { font-family: var(--catp-mono); font-size: 11px; color: var(--catp-ink-mute); }
+.catp-slots button[aria-pressed="true"] { border-color: var(--catp-primary); background: var(--catp-primary); color: #fff; }
 
-/* CHAT — the Help page */
-.catp-chat { display: flex; flex-direction: column; gap: 16px; }
-.catp-bubble {
-  align-self: flex-start;
-  max-width: 85%;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: 14px 14px 14px 2px;
-  padding: 12px 16px;
-  font-size: 14px;
-  margin: 0;
+/* gear checklist */
+.catp-check {
+  display: flex; align-items: center; gap: 9px;
+  min-height: 39px;
+  border-bottom: 1px solid #edf0ec;
+  color: #56635b;
+  font-size: 12px;
 }
-.catp-bubble.catp-bubble--me { align-self: flex-end; border-radius: 14px 14px 2px 14px; background: var(--catp-ink); color: var(--catp-paper); border-color: var(--catp-ink); }
-.catp-faq { display: flex; flex-direction: column; gap: 8px; }
-.catp-faq button, .catp-faq .wp-block-button__link {
-  display: flex;
+.catp-check input { display: none; }
+.catp-check .catp-box { display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid #bac5ba; border-radius: 5px; color: #263126; }
+.catp-check:has(input:checked) .catp-box { border-color: var(--catp-accent); background: var(--catp-accent); }
+
+/* toggle */
+.catp-toggle { width: 39px; height: 22px; padding: 3px; border: 0; border-radius: 99px; background: #d9ded9; }
+.catp-toggle span { display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .18s; }
+.catp-toggle[aria-pressed="true"] { background: #a9c832; }
+.catp-toggle[aria-pressed="true"] span { transform: translateX(17px); }
+
+/* 8. LISTS, CALCULATOR, GALLERY, CHAT ---------------------------------------- */
+
+/* the Program Goods calculator */
+.catp-kit-list { display: grid; gap: 0; }
+.catp-kit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px 56px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--catp-border);
+}
+.catp-kit-copy { display: grid; gap: 3px; }
+.catp-kit-copy strong { font-size: 12px; }
+.catp-kit-copy small, .catp-kit-note { color: var(--catp-muted-foreground); font-size: 10px; line-height: 1.45; }
+.catp-qty { display: flex; align-items: center; justify-content: center; gap: 7px; }
+.catp-qty button {
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border: 1px solid var(--catp-border);
+  border-radius: 7px;
+  background: var(--catp-background);
+  color: var(--catp-foreground);
+  font-size: 16px; line-height: 1;
+}
+.catp-qty output, .catp-qty input { min-width: 16px; width: 16px; padding: 0; border: 0; background: none; text-align: center; font-family: var(--catp-mono); font-size: 11px; }
+.catp-kit-subtotal { font-family: var(--catp-mono); font-size: 11px; text-align: right; }
+.catp-kit-divider {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--catp-border);
+  color: #7b877e; font-family: var(--catp-mono); font-size: 9px; font-weight: 700; letter-spacing: .1em;
+}
+.catp-kit-total {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 2px solid var(--catp-foreground);
+  font-size: 13px;
+}
+.catp-kit-total strong { font-size: 20px; }
+.catp-kit-note { margin: -7px 0 0; }
+.catp-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+  border-top: 1px solid var(--catp-border);
+  border-bottom: 1px solid var(--catp-border);
+  font-size: 12px;
+}
+.catp-summary strong { font-size: 18px; }
+
+/* status badge */
+.catp-status { padding: 4px 7px; border-radius: 999px; font-family: var(--catp-mono); font-size: 8px; font-weight: 700; }
+.catp-status--available { background: #dcebb4; color: #536b1d; }
+.catp-status--out { background: #e4e8e3; color: #6f7971; }
+
+/* directory */
+.catp-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 13px;
+  border: 1px solid var(--catp-input);
+  border-radius: 10px;
+  background: var(--catp-card);
+  color: #89958c;
+}
+.catp-search input { width: 100%; height: 43px; border: 0; outline: 0; background: transparent; color: var(--catp-foreground); font-size: 12px; }
+.catp-directory-list { display: grid; gap: 24px; margin-top: 17px; }
+.catp-directory-group { display: grid; gap: 0; }
+.catp-directory-group > .catp-eyebrow { margin-bottom: 8px; }
+.catp-directory-entry { border-bottom: 1.5px solid #000; }
+.catp-directory-row {
+  display: flex; align-items: center; gap: 11px;
   width: 100%;
+  padding: 14px 0;
+  border: 0;
+  background: transparent;
   text-align: left;
-  border: var(--catp-border) solid var(--catp-line);
-  border-radius: var(--catp-radius);
-  padding: 14px 16px;
-  font-size: 14px;
-  font-weight: 400;
-  background: none;
-  color: var(--catp-ink);
+}
+.catp-directory-row > div:first-child { display: grid; flex: 1; gap: 3px; }
+.catp-directory-row strong { font-size: 13px; }
+.catp-directory-row span { color: #79857c; font-size: 11px; }
+.catp-room { display: inline-flex; align-items: center; gap: 4px; color: #79857c; font-family: var(--catp-mono); font-size: 9px; }
+
+/* peer-tutor list */
+.catp-leaderboard { display: grid; gap: 0; margin-top: 6px; padding-top: 18px; border-top: 1px solid var(--catp-border); }
+.catp-rank {
+  display: grid;
+  grid-template-columns: 27px 1fr auto;
+  align-items: center;
+  min-height: 37px;
+  border-top: 1px solid #edf0ec;
+}
+.catp-rank span   { color: #89958d; font-family: var(--catp-mono); font-size: 10px; }
+.catp-rank strong { font-size: 12px; }
+.catp-rank small  { color: #748075; font-size: 10px; }
+
+/* progress */
+.catp-progress { height: 7px; overflow: hidden; border-radius: 99px; background: #e8ece5; }
+.catp-progress span { display: block; height: 100%; border-radius: inherit; background: var(--catp-accent); }
+.catp-progress-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 3px; color: #77837a; font-size: 10px; }
+.catp-progress-meta strong { color: #4f6019; font-family: var(--catp-mono); }
+
+/* gallery (Drop Zone / Board) */
+.catp-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.catp-tile { display: grid; gap: 8px; padding: 0 0 10px; border: 1.5px solid #000; background: #fff; color: #000; text-align: left; }
+.catp-tile img, .catp-tile .wp-block-post-featured-image img {
+  display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-bottom: 1.5px solid #000;
+}
+.catp-tile span, .catp-tile .wp-block-post-title { padding: 0 9px; font-size: 11px; font-weight: 700; }
+@media (min-width: 1024px) { .catp-gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1440px) { .catp-gallery { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.catp-pending {
+  display: flex; align-items: center; gap: 7px;
+  margin: 0; padding: 12px;
+  border: 1.5px solid #000;
+  font-size: 11px; line-height: 1.45;
 }
 
-/* 8. UTILITIES -------------------------------------------------------------- */
+/* help chat */
+.catp-chat { display: grid; gap: 16px; margin-top: 28px; }
+.catp-chat-messages { display: grid; gap: 10px; }
+.catp-bubble { max-width: 88%; margin: 0; padding: 13px 15px; border-radius: 14px; font-size: 12px; line-height: 1.55; }
+.catp-bubble { justify-self: start; background: var(--catp-card); border: 1px solid var(--catp-border); }
+.catp-bubble--me { justify-self: end; background: var(--catp-primary); color: var(--catp-primary-foreground); border-color: var(--catp-primary); }
+.catp-faq { display: grid; gap: 8px; }
+.catp-faq button, .catp-faq .wp-block-button__link, .catp-faq a {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 0;
+  padding: 12px 13px;
+  border: 1px solid var(--catp-border);
+  border-radius: 10px;
+  background: var(--catp-card);
+  color: var(--catp-foreground);
+  text-align: left;
+  font-size: 11px; font-weight: 700;
+}
+.catp-composer { display: flex; gap: 8px; padding: 5px; border: 1px solid var(--catp-border); border-radius: 12px; background: var(--catp-card); }
+.catp-composer input { flex: 1; min-width: 0; padding: 0 10px; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.catp-composer button { display: grid; place-items: center; width: 36px; min-height: 0; border: 0; border-radius: 8px; background: var(--catp-accent); color: var(--catp-accent-foreground); }
 
-/* keep app pages in a phone-width column, centered */
-:is(.catp-app, .editor-styles-wrapper) .catp-page { max-width: var(--catp-maxw); margin-left: auto; margin-right: auto; }
+/* desktop refinements the prototype makes */
+@media (min-width: 1024px) {
+  .catp-form { max-width: 820px; }
+  .catp-field-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .catp-directory-group { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+  .catp-directory-group > .catp-eyebrow { grid-column: 1 / -1; }
+  .catp-notification-list, .catp-event-list { gap: 12px; }
+}
+@media (max-width: 420px) {
+  .catp-page { padding-inline: 16px; }
+  .catp-field-row { grid-template-columns: 1fr; }
+}
 
-/* a full-width call to action, e.g. "Reserve a resource" */
-.catp-app .catp-cta .wp-block-button__link { background: var(--catp-ink); color: var(--catp-paper); }
-
-/* The app has its own header (`catp-page-header`), so the theme's site
-   header and footer are usually redundant on these pages. Uncomment to
-   hide them — the selectors are Blocksy's; check yours before relying on it.
-.catp-app #header,
-.catp-app #footer { display: none; }
-*/
+/* 9. WIREFRAME MODE ---------------------------------------------------------
+   The prototype's own override, kept verbatim in spirit: black and white,
+   square corners, 1.5px rules. This is what the prototype renders TODAY.
+   DELETE THIS WHOLE SECTION to switch to the colour design in section 1.
+   -------------------------------------------------------------------------- */
+:root {
+  --catp-background: #ffffff;
+  --catp-foreground: #000000;
+  --catp-card: #ffffff;
+  --catp-primary: #000000;
+  --catp-primary-foreground: #ffffff;
+  --catp-muted-foreground: #000000;
+  --catp-accent: #000000;
+  --catp-accent-foreground: #ffffff;
+  --catp-border: #000000;
+  --catp-input: #000000;
+  --catp-ring: #000000;
+  --catp-radius: 0px;
+}
+.catp-app *, .catp-app *::before, .catp-app *::after { border-color: #000 !important; border-radius: 0 !important; }
+.catp-app { background: #fff !important; color: #000 !important; }
+.catp-app button, .catp-app input, .catp-app select, .catp-app textarea { border-width: 1.5px !important; }
+.catp-app button { background: #fff; color: #000; }
+.catp-app .wp-block-button__link, .catp-cta, .catp-cta--wide,
+.catp-tabs--segment [role="tab"][aria-selected="true"],
+.catp-tabs--sub [role="tab"][aria-selected="true"],
+.catp-slots button[aria-pressed="true"], .catp-days button[aria-pressed="true"],
+.catp-bubble--me, .catp-status--available { background: #000 !important; color: #fff !important; }
+.catp-spark, .catp-header-icon, .catp-notification, .catp-event, .catp-card, .catp-form,
+.catp-calendar, .catp-chip, .catp-bubble, .catp-composer, .catp-search,
+.catp-tabs--segment [role="tablist"] { background: #fff !important; color: #000 !important; }
+.catp-dot, .catp-days button i, .catp-progress span { background: #000 !important; }
+.catp-sub, .catp-page-header p, .catp-notification p, .catp-event p, .catp-kit-copy small,
+.catp-kit-note, .catp-form-description, .catp-notification span, .catp-event-copy > span,
+.catp-eyebrow, .catp-text-button, .catp-room, .catp-directory-row span { color: #000 !important; }
+.catp-appnav { background: #fff !important; }
+.catp-appnav .current-menu-item > a, .catp-appnav [aria-current="page"] { color: #000 !important; }
+.catp-appnav [aria-current="page"] svg { color: inherit !important; }
+/* the "+" in the wordmark keeps its green in the header, black in the rail —
+   the prototype's wireframe leaves .brand-mark span alone */
+.catp-brand span { color: #9dbd25; }

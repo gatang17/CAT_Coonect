@@ -448,8 +448,8 @@ function catp_connect_b_page_header( $title, $subtitle ) {
 function catp_connect_b_tabs_intro( $tabs ) {
 	return catp_connect_b_note(
 		'<strong>Setup note (delete once done):</strong> each Group below is one tab: ' . esc_html( implode( ' · ', $tabs ) ) .
-		'. To turn them into real tabs, add a <strong>Stackable → Tabs</strong> block with these tab labels, give that block the class <code>catp-tabs</code> (Block → Advanced → Additional CSS class(es)), and move each Group into its tab. ' .
-		'For a second level inside a tab, nest another Tabs block with <code>catp-tabs catp-tabs--sub</code>. ' .
+		'. To turn them into real tabs, add a <strong>Stackable → Tabs</strong> block with these tab labels, give that block the class <code>catp-tabs catp-tabs--sub</code> (Block → Advanced → Additional CSS class(es)), and move each Group into its tab. ' .
+		'Two labels only? add <code>catp-tabs--two</code> as well. A first level that switches whole modes of a page uses <code>catp-tabs--segment</code> instead. ' .
 		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field. ' .
 		'The look comes from <code>catp-app.css</code>, pasted into Customizer → Additional CSS — the plugin ships no styles.'
 	);
@@ -486,34 +486,49 @@ function catp_connect_page_skeleton( $nav_ref = 0 ) {
 	// Tab 2 — Drop Zone: the same approved Board Posts as Get Involved → Board,
 	// surfaced on Home because that is where students look first. One post type,
 	// two places: publishing a Board Post is still the single approval step.
+	// Tab 2 — Drop Zone: the moderated gallery. The prototype puts the Board
+	// here (and on its own Drop Zone screen), not under Get Involved, so the
+	// gallery and its submission form live together.
 	$home_dropzone = catp_connect_b_tab( 'drop-zone', 'Drop Zone',
-		catp_connect_b_section( 'Student work', 'Fresh off the board' )
-		. catp_connect_b_query( 'board_post', 17, catp_connect_b_card( '<!-- wp:post-featured-image /-->' . $title ), 'date', 'desc', 6 )
-		. catp_connect_b_note( 'Same posts as Get Involved → Board, newest first. Add a Meta Field Block for <code>board_post_display_name</code> ("Anonymous" when empty). Never show <code>board_post_email</code>.' )
-		. catp_connect_b_buttons( array(
-			array( 'Submit your work', '/get-involved/', 'catp-cta--camera' ),
-		) )
-		. catp_connect_b_note( 'The submission form itself lives in Get Involved → Board (Forminator → Post Creation, saved as Draft). This button just sends people there, so there is only one form to maintain. "Drop Zone" is a label — rename it here and in the nav once the Board naming is decided.' )
+		catp_connect_b_section( 'CAT droppings', 'Student work, on the wall.' )
+		. catp_connect_b_para( 'A moderated gallery for sharing creativity across the program.', 'catp-form-description' )
+		. catp_connect_b_note( 'Submission form goes here (Forminator → Post Creation, post type Board Posts, status <strong>Draft</strong>): title, image, school email (@kctcs.edu), optional display name. Publishing the draft is the approval. Show the "pending approval" line as a <code>catp-pending</code> paragraph after submitting.' )
+		. catp_connect_b_group( 'catp-gallery',
+			catp_connect_b_query( 'board_post', 13, catp_connect_b_group( 'catp-tile', '<!-- wp:post-featured-image /-->' . $title ), 'date', 'desc', 12 )
+		)
+		. catp_connect_b_note( 'Give the Query Loop\'s wrapper <code>catp-gallery</code> and each card <code>catp-tile</code> — 2 columns on a phone, 4 on a desktop. Add a Meta Field Block for <code>board_post_display_name</code> ("Anonymous" when empty). Never show <code>board_post_email</code>.' )
 	);
 
 	$home = $home_intro
-		. catp_connect_b_note( '<strong>Setup note (delete once done):</strong> the two Groups below are Home\'s top tabs: Updates · Drop Zone. Add a <strong>Stackable → Tabs</strong> block with those labels, give it the class <code>catp-tabs catp-tabs--pill</code> (the rounded switch), and move each Group into its tab.' )
+		. catp_connect_b_note( '<strong>Setup note (delete once done):</strong> the two Groups below are Home\'s top tabs: Updates · Drop Zone. Add a <strong>Stackable → Tabs</strong> block with those labels, give it the class <code>catp-tabs catp-tabs--folder</code> (the file-folder tabs the prototype uses on Home), and move each Group into its tab.' )
 		. $home_updates
 		. $home_dropzone;
 
+	// Resources has TWO tab levels in the prototype: Bookings vs Materials &
+	// Equipment on top, and the individual tools underneath. The Groups below
+	// mirror that nesting — an outer Group per category, inner Groups per tool.
 	$resources = catp_connect_b_page_header( 'Resources', 'Make space for the work.' )
-		. catp_connect_b_tabs_intro( array( 'Tutoring', 'Studio', 'Goods', 'Borrow', 'Photo Form' ) )
-		. catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab — the app captures nothing for tutoring.' ) )
-		. catp_connect_b_tab( 'studio', 'Studio', catp_connect_b_note( 'Booking Calendar goes here: 4 fixed slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00), a gear checklist, and the school email as contact. Must also block times taken by regular classes.' ) )
-		. catp_connect_b_tab( 'goods', 'Goods', catp_connect_b_para( 'Price calculator for print materials and merch — nothing is ordered here.' ) . catp_connect_b_query( 'product', 12, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>product_size</code>, <code>product_price</code> and <code>product_category</code> inside each card, then a quantity input + running total.' ) )
-		. catp_connect_b_tab( 'borrow', 'Borrow', catp_connect_b_note( 'WP Inventory Manager goes here: live available / checked-out status of the shared iPads, and the request form. Same-day, in-classroom use only.' ) )
-		. catp_connect_b_tab( 'photo-form', 'Photo Form', catp_connect_b_note( 'Forminator form goes here: school email (@kctcs.edu, required even for a guest), session type (model / photographer), desired date, guest name.' ) );
+		. catp_connect_b_note(
+			'<strong>Setup note (delete once done):</strong> this page has two tab levels. '
+			. 'Add a <strong>Stackable → Tabs</strong> block with <code>catp-tabs catp-tabs--segment</code> and the labels <em>Bookings</em> · <em>Materials &amp; Equipment</em>; '
+			. 'inside each of those, nest a second Tabs block with <code>catp-tabs catp-tabs--sub</code> for the tools listed in its heading.'
+		)
+		. catp_connect_b_tab( 'bookings', 'Bookings',
+			catp_connect_b_note( 'Second level here: Tutoring · Studio · Photo Form.' )
+			. catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab — the app captures nothing for tutoring.' ) )
+			. catp_connect_b_tab( 'studio', 'Studio', catp_connect_b_note( 'Booking Calendar goes here: 4 fixed slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00), a gear checklist (<code>catp-check</code> rows), and the school email as contact. Must also block times taken by regular classes.' ) )
+			. catp_connect_b_tab( 'photo-form', 'Photo Form', catp_connect_b_note( 'Forminator form goes here: school email (@kctcs.edu, required even for a guest), session type, desired date, guest name, preferred photographer.' ) )
+		)
+		. catp_connect_b_tab( 'materials', 'Materials & Equipment',
+			catp_connect_b_note( 'Second level here: Program Goods · Borrow.' )
+			. catp_connect_b_tab( 'program-goods', 'Program Goods', catp_connect_b_para( 'Build your supply list, then request it for admin preparation.' ) . catp_connect_b_query( 'product', 12, $plain_card ) . catp_connect_b_note( 'This is the supply calculator. Each row needs Meta Field Blocks for <code>product_size</code>, <code>product_price</code> and <code>product_category</code>, plus a quantity stepper and a running total — give the rows <code>catp-kit-row</code>, the stepper <code>catp-qty</code> and the total <code>catp-kit-total</code>. <strong>The arithmetic needs JavaScript</strong>: no block plugin adds up ACF prices. See the note in README.' ) )
+			. catp_connect_b_tab( 'borrow', 'Borrow', catp_connect_b_note( 'WP Inventory Manager goes here: the 10 shared iPads with live available / checked-out status (<code>catp-status</code> badges) and the request form. Same-day, in-classroom use only, and a faculty member must check the iPad out.' ) )
+		);
 
 	$get_involved = catp_connect_b_page_header( 'Get Involved', 'Put your skills into motion.' )
-		. catp_connect_b_tabs_intro( array( 'Volunteer Form', 'Submit Work', 'Board' ) )
+		. catp_connect_b_tabs_intro( array( 'Volunteer Form', 'Submit Work' ) )
 		. catp_connect_b_tab( 'volunteer-form', 'Volunteer Form', catp_connect_b_note( 'Forminator form goes here: school email, request date, event (dropdown), and the "Become a Peer Tutor" request (subject + availability). Say clearly that volunteer hours count toward practicum hours.' ) )
-		. catp_connect_b_tab( 'submit-work', 'Submit Work', catp_connect_b_note( 'Forminator form goes here: name, work type (Ad / Photo / Web), OneDrive folder link (no upload), optional event. Show the file-naming instructions next to the form.' ) )
-		. catp_connect_b_tab( 'board', 'Board', catp_connect_b_query( 'board_post', 13, catp_connect_b_card( '<!-- wp:post-featured-image /-->' . $title ), 'date', 'desc' ) . catp_connect_b_note( 'Image-gallery grid. Add a Meta Field Block for <code>board_post_image</code> (or use the featured image) and one for <code>board_post_display_name</code> with "Anonymous" as the fallback. Never show <code>board_post_email</code>. The submission form (Forminator, Post Creation → Board Posts, as Draft) goes above the grid.' ) );
+		. catp_connect_b_tab( 'submit-work', 'Submit Work', catp_connect_b_note( 'Forminator form goes here: name, work type (Ad / Photo / Web), OneDrive folder link (no upload), optional event. Show the file-naming instructions next to the form.' ) );
 
 	$more = catp_connect_b_page_header( 'More', 'Find your people. Keep growing.' )
 		. catp_connect_b_tabs_intro( array( 'My Program', 'Preparation' ) )

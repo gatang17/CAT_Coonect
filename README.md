@@ -127,15 +127,21 @@ The page skeleton is built from **core Gutenberg blocks only** — Groups, Headi
 
    Change those and the whole app changes at once. Below them, plain `h1`–`h4`, paragraphs and buttons inside app pages already share one consistent style — nobody has to set spacing per page.
 
-2. **Reusable components**, applied by class in the editor (Block → Advanced → *Additional CSS class(es)*):
+2. **Reusable components**, applied by class in the editor (Block → Advanced → *Additional CSS class(es)*). Every one is a translation of a class in the prototype's `globals.css`, with the prototype's own sizes and colours:
 
    | Group | Classes |
    |---|---|
-   | Shell | `catp-appnav` (the fixed nav) · `catp-brand` (the CATP+ wordmark) · `catp-page-header` · `catp-page` (the centered column) |
-   | Tabs | `catp-tabs` · `catp-tabs--sub` (second level) · `catp-tabs--pill` (the rounded style) |
-   | Content | `catp-section` (eyebrow + title + optional "See all") · `catp-card` (bordered row with an arrow) · `catp-card--event` + `catp-badge` · `catp-list` (a Query Loop) |
-   | App | `catp-notification` (+ `catp-tint-mint` / `catp-tint-peach`) · `catp-event` · `catp-chip` · `catp-calendar` · `catp-form` + `catp-field-row` · `catp-choice` · `catp-search` · `catp-directory-row` · `catp-rank` · `catp-chat` + `catp-bubble` · `catp-faq` |
-   | Text | `catp-eyebrow` (small mono label) · `catp-sub` · `catp-note` (setup hint) |
+   | Shell | `catp-appnav` (the fixed nav: bottom bar under 1024px, left rail above) · `catp-brand` · `catp-page-header` + `catp-page-header-copy` + `catp-header-icon` · `catp-page` (the centered column) · `catp-intro` + `catp-spark` (Home's greeting) |
+   | Tabs | `catp-tabs--folder` (Home) · `catp-tabs--segment` (a page's first level) · `catp-tabs--sub` (+ `catp-tabs--two`) |
+   | Content | `catp-section` · `catp-card` · `catp-notification` (+ `catp-tint-peach` / `catp-tint-lavender`) · `catp-event` + `catp-event-date` · `catp-list` |
+   | Forms | `catp-form` · `catp-field-row` · `catp-choice` · `catp-chip` · `catp-calendar` + `catp-days` · `catp-slots` · `catp-check` · `catp-toggle` |
+   | Goods | `catp-kit-row` + `catp-kit-copy` + `catp-qty` + `catp-kit-subtotal` + `catp-kit-divider` + `catp-kit-total` · `catp-status` |
+   | Lists | `catp-search` · `catp-directory-row` + `catp-room` · `catp-rank` · `catp-gallery` + `catp-tile` · `catp-progress` |
+   | Help | `catp-chat` · `catp-bubble` (+ `--me`) · `catp-faq` · `catp-composer` |
+   | Buttons | `catp-cta` · `catp-cta--wide` (the accent bar) · `catp-text-button` |
+   | Text | `catp-eyebrow` · `catp-sub` · `catp-note` · `catp-form-description` |
+
+   Two things worth knowing about the file. It loads **DM Sans** and **IBM Plex Mono** with an `@import` that must stay on line 1. And its last section is **wireframe mode** — the prototype's own black-and-white override, which is what the prototype renders today; delete that section to switch to the olive/lime palette defined at the top.
 
 3. **Block Styles** so nobody has to type those class names: select a Group in the editor → Styles → *CATP Card* or *CATP Section header*; a Paragraph → *CATP Eyebrow label* or *CATP Note*.
 
