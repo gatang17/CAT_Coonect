@@ -78,7 +78,11 @@
 :is(.catp-app, .editor-styles-wrapper) .wp-block-buttons .wp-block-button { width: 100%; margin: 0 0 var(--catp-gap); }
 
 /* 3. TEXT ROLES ------------------------------------------------------------ */
+/* Note the doubled scope on these three: the base rules above are written as
+   `<app scope> p { ... }`, which outranks a bare class. Scoping the roles the
+   same way (plus the class) puts them back on top. */
 .catp-eyebrow,                       /* small uppercase label above a title */
+:is(.catp-app, .editor-styles-wrapper) .catp-eyebrow,
 :is(.catp-app, .editor-styles-wrapper) .is-style-catp-eyebrow {
   font-family: var(--catp-mono);
   font-size: 10px;
@@ -88,8 +92,10 @@
   line-height: 1.4;
   margin: 0 0 6px;
 }
-.catp-sub { color: var(--catp-ink-soft); margin: 0 0 36px; }   /* subtitle under an h1 */
-.catp-note, :is(.catp-app, .editor-styles-wrapper) .is-style-catp-note {                    /* setup notes / hints */
+.catp-sub, :is(.catp-app, .editor-styles-wrapper) .catp-sub { color: var(--catp-ink-soft); margin: 0 0 36px; }   /* subtitle under an h1 */
+.catp-note,
+:is(.catp-app, .editor-styles-wrapper) .catp-note,
+:is(.catp-app, .editor-styles-wrapper) .is-style-catp-note {   /* setup notes / hints */
   font-size: 12.5px;
   color: var(--catp-ink-mute);
   font-style: italic;
@@ -131,6 +137,7 @@
   width: 100%;
 }
 .catp-section-row > h2 { margin: 0; flex: 1 1 auto; }
+:is(.catp-app, .editor-styles-wrapper) .catp-section-row > p,
 .catp-section-row > p {            /* the "See all →" link */
   flex: 0 0 auto;
   font-size: 12px;
@@ -163,6 +170,8 @@
 }
 .catp-card .wp-block-post-title, .catp-card h3 { margin: 0 0 6px; }
 .catp-card .wp-block-post-title a { text-decoration: none; }
+:is(.catp-app, .editor-styles-wrapper) .catp-card .wp-block-post-excerpt p,
+:is(.catp-app, .editor-styles-wrapper) .catp-card p,
 .catp-card .wp-block-post-excerpt p, .catp-card p { font-size: 12.5px; color: var(--catp-ink-soft); margin: 0; }
 .catp-card .wp-block-post-excerpt__more-text { display: none; }
 .catp-card .wp-block-post-featured-image { margin: 0 0 10px; }
