@@ -39,13 +39,14 @@ So the data layer and the page structure exist; what's left is content that wasn
    - Open each of the 4 Classes / Subjects and pick its **Classroom** (the field is required, so the screen will insist).
    - Confirm the **Large board** size and price (seeded as placeholders: 15x20, $3.00).
    - Create **one** App Settings post (title "App Settings") and paste the **Tutoring External URL** — the program's existing "Request Tutoring" page. Never create a second App Settings post.
-7. **Turn the page sections into tabs.** Each page has a "Setup note" at the top and one Group block per tab. Add a **Stackable → Tabs** block with the tab labels, move each Group into its tab, delete the setup note. Where a note says "add a Meta Field Block for `some_field`", add that block inside the post list and pick that ACF field.
-8. **Build the forms** in the tabs whose notes name them (details in README → App structure):
+7. **The look is a wireframe on purpose.** Neutral borders, no brand colors — so you can design on top of it. Start with the tokens at the top of `wordpress/catp-connect/assets/catp-app.css` (colors, fonts, border thickness, spacing) plus Blocksy's Customizer for global typography and palette. The reusable pieces are available in the editor as Block Styles (Group → "CATP Card" / "CATP Section header", Paragraph → "CATP Eyebrow label" / "CATP Note"), so you rarely need to type a class. See README → "How the styling is organised".
+8. **Turn the page sections into tabs.** Each page has a "Setup note" at the top and one Group block per tab. Add a **Stackable → Tabs** block with the tab labels, move each Group into its tab, delete the setup note. Where a note says "add a Meta Field Block for `some_field`", add that block inside the post list and pick that ACF field.
+9. **Build the forms** in the tabs whose notes name them (details in README → App structure):
    - Volunteer Form, Photo Form, Submit Work → **Forminator**. Every one has a school-email field: add a **pattern/regex validation** that only accepts `@kctcs.edu` addresses — that's the whole identity system, there is no login.
    - Board → **Forminator with Post Creation**: post type = Board Posts, status = **Draft**, and map the form fields to the ACF fields `board_post_email`, `board_post_image`, `board_post_display_name`, `board_post_date`. An admin then approves by publishing.
    - Studio → **Booking Calendar**: 4 fixed slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00), gear checklist, school email as contact; block times taken by regular classes.
    - Borrow → **WP Inventory Manager**: add the 10 iPads there (it owns the equipment catalog — there is deliberately no ACF post type for equipment).
-9. **One thing to verify early:** `subject_teachers` is a multi-value field. Check that the free Meta Field Block renders all three Advertising Design teachers. If it only handles single values, show the relation from the teacher side instead.
+10. **One thing to verify early:** `subject_teachers` is a multi-value field. Check that the free Meta Field Block renders all three Advertising Design teachers. If it only handles single values, show the relation from the teacher side instead.
 
 ## Rules that must not break
 
@@ -61,7 +62,8 @@ These come from the program's requirements, not from taste:
 
 - **A field** (add/rename/reorder): edit `wordpress/catp-connect/acf-field-groups.json` (it's ACF's own export format), re-zip, re-upload with "Replace current with uploaded". The groups are read-only in the ACF admin on purpose — the repo is the source of truth.
 - **A post type**: edit `catp_connect_post_types()` in `wordpress/catp-connect/catp-connect.php`.
-- **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`.
+- **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`. Re-running "Create page skeleton" with the **Overwrite** checkbox replaces the four pages' content with a fresh skeleton — handy right after a plugin update, destructive once someone has designed those pages, so leave it unchecked by default.
+- **The look**: `wordpress/catp-connect/assets/catp-app.css` (tokens at the top).
 - **The data model itself**: update `database/schema.sql` too, so the reference stays honest.
 - Commit to the repo. Don't let the live site drift from what's in git.
 

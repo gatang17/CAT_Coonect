@@ -14,6 +14,7 @@ This README is the map of the whole project: what the app looks like, how its da
 |---|---|---|
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
 | `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the four app pages with one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
+| `wordpress/catp-connect/assets/catp-app.css` | The base stylesheet: design tokens (colors, fonts, borders) at the top, then text roles and layout components. Deliberately a **wireframe** — neutral borders, no brand colors — so the visual design can be done on top without unpicking anything. Loaded on the front end and inside the block editor. | **Whoever does the visual design.** Change the variables at the top and the whole app follows; no need to set margins or padding page by page. Can also be pasted into Customizer → Additional CSS if editing files is inconvenient. |
 | `wordpress/catp-connect/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. The plugin loads this file automatically; it is also importable by hand via Custom Fields → Tools. | **The person filling in content** reads it (via the ACF screens it produces) to know exactly which fields to fill for each catalog item. **Whoever maintains the site** edits it here, in the repo, not in the ACF UI. |
 
 Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
@@ -109,7 +110,35 @@ Showing an ACF field's *value* on a page is a paid feature everywhere you'd expe
 
 One thing to check on the real site before building around it: `subject_teachers` is a *multiple* Post Object field (one subject, several teachers). Meta Field Block documents rendering Relationship/Post Object fields "as a Query Loop" — confirm the free tier does that for the three-teacher case. If it doesn't, show the relation from the teacher side instead (each teacher lists their subject, a single Post Object, which the free tier handles).
 
-### 4. What to actually type into each one
+### 4. How the styling is organised
+
+The page skeleton is built from **core Gutenberg blocks only** — Groups, Headings, Paragraphs, Query Loops. Nothing is rendered from PHP, so every part of every page can be moved, restyled or deleted in the editor. The plugin contributes exactly three things and no markup:
+
+1. **`assets/catp-app.css`** — the base layer. At the top are the design tokens:
+
+   ```css
+   --catp-ink / --catp-ink-soft / --catp-ink-mute   /* text */
+   --catp-paper                                     /* background */
+   --catp-line                                      /* border color */
+   --catp-accent                                    /* brand color, unset for now */
+   --catp-font / --catp-mono                        /* typefaces */
+   --catp-border / --catp-radius / --catp-gap / --catp-pad / --catp-maxw
+   ```
+
+   Change those and the whole app changes at once. Below them, plain `h1`–`h4`, paragraphs and buttons inside app pages already share one consistent style — nobody has to set spacing per page.
+
+2. **Reusable components**, applied by class: `catp-section` (eyebrow + title + optional "See all"), `catp-card` (bordered row with an arrow), `catp-card--event` + `catp-badge` (big date on the left), `catp-eyebrow` (small mono label), `catp-note` (setup hint), `catp-list` (a Query Loop), `catp-page` (the centered column).
+
+3. **Block Styles** so nobody has to type those class names: select a Group in the editor → Styles → *CATP Card* or *CATP Section header*; a Paragraph → *CATP Eyebrow label* or *CATP Note*.
+
+Two notes for whoever designs on top of this:
+
+- **Blocksy's Customizer already handles global typography and colors** (Customizer → Typography / Colors). Use it for fonts and the palette; leave this stylesheet for the pieces Blocksy doesn't know about (cards, eyebrows, section headers).
+- A few rules use a doubled class (`.catp-card.catp-card > *`) and `!important` on purpose: WordPress prints its own layout CSS *after* plugin stylesheets, and it caps and centers the width of every child block. Without that override, labels and titles drift to the middle of their card. Keep them unless you also remove the constrained layout.
+
+**Bottom navigation bar:** don't build it in code. Put the *App Navigation* menu in Blocksy's footer (Customizer → Footer), give that footer row the class `catp-bottom-nav`, and the stylesheet pins it to the bottom of the screen on phones.
+
+### 5. What to actually type into each one
 
 This is the part meant for whoever is filling in content, not necessarily writing code:
 

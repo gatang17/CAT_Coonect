@@ -43,7 +43,7 @@ function catp_connect_setup_page() {
 		if ( 'seed_catalog' === $action ) {
 			$result = catp_connect_seed_catalog();
 		} elseif ( 'create_pages' === $action ) {
-			$result = catp_connect_create_page_skeleton();
+			$result = catp_connect_create_page_skeleton( ! empty( $_POST['catp_overwrite'] ) );
 		}
 	}
 
@@ -98,6 +98,7 @@ function catp_connect_setup_page() {
 		<form method="post">
 			<?php wp_nonce_field( 'catp_connect_setup', 'catp_nonce' ); ?>
 			<input type="hidden" name="catp_action" value="create_pages">
+			<p><label><input type="checkbox" name="catp_overwrite" value="1"> <strong>Overwrite</strong> the content of pages that already exist (Home, Resources, Get Involved, More). Leave unchecked to only create the missing ones. Overwriting replaces whatever is on those pages with the fresh skeleton — use it right after a plugin update, before anyone has designed the pages.</label></p>
 			<?php submit_button( 'Create page skeleton', 'primary', 'submit', false ); ?>
 		</form>
 	</div>
@@ -291,24 +292,59 @@ function catp_connect_seed_catalog() {
 }
 
 /* -------------------------------------------------------------------------
- * 2. Page skeleton
+ * 2. Page skeleton — core blocks only, editable like any other page.
+ *    The catp-* classes are hooks for assets/catp-app.css (and the matching
+ *    Block Styles); they impose structure, not design.
  * ---------------------------------------------------------------------- */
 
 function catp_connect_b_heading( $text, $level = 2 ) {
 	return sprintf( '<!-- wp:heading {"level":%1$d} --><h%1$d class="wp-block-heading">%2$s</h%1$d><!-- /wp:heading -->', (int) $level, esc_html( $text ) );
 }
-function catp_connect_b_para( $html ) {
+function catp_connect_b_para( $html, $class = '' ) {
+	if ( $class ) {
+		return sprintf( '<!-- wp:paragraph {"className":"%1$s"} --><p class="%1$s">%2$s</p><!-- /wp:paragraph -->', esc_attr( $class ), wp_kses_post( $html ) );
+	}
 	return '<!-- wp:paragraph --><p>' . wp_kses_post( $html ) . '</p><!-- /wp:paragraph -->';
+}
+function catp_connect_b_eyebrow( $text ) {
+	return catp_connect_b_para( esc_html( $text ), 'catp-eyebrow' );
+}
+function catp_connect_b_note( $text ) {
+	return catp_connect_b_para( $text, 'catp-note' );
 }
 function catp_connect_b_shortcode( $sc ) {
 	return '<!-- wp:shortcode -->' . $sc . '<!-- /wp:shortcode -->';
 }
-/** A core Query Loop over one post type; $inner is the per-post template. */
-function catp_connect_b_query( $post_type, $query_id, $inner, $order_by = 'title', $order = 'asc' ) {
+/** A Group with a class. $layout: constrained (default) or none. */
+function catp_connect_b_group( $class, $inner ) {
+	return sprintf(
+		'<!-- wp:group {"className":"%1$s","layout":{"type":"constrained"}} --><div class="wp-block-group %1$s">%2$s</div><!-- /wp:group -->',
+		esc_attr( $class ),
+		$inner
+	);
+}
+/** Section header: eyebrow + h2 (+ optional "See all" link). */
+function catp_connect_b_section( $eyebrow, $title, $more_text = '', $more_href = '' ) {
+	$row = catp_connect_b_heading( $title, 2 );
+	if ( $more_text ) {
+		$row .= catp_connect_b_para( sprintf( '<a href="%s">%s &rarr;</a>', esc_url( $more_href ? $more_href : '#' ), esc_html( $more_text ) ) );
+	}
+	return catp_connect_b_group( 'catp-section', catp_connect_b_eyebrow( $eyebrow ) . catp_connect_b_group( 'catp-section-row', $row ) );
+}
+/** One tab-to-be. */
+function catp_connect_b_tab( $slug, $label, $inner ) {
+	return catp_connect_b_group( 'catp-tab catp-tab-' . $slug, catp_connect_b_heading( $label, 2 ) . $inner );
+}
+/** A card (used inside a Query Loop's post template). */
+function catp_connect_b_card( $inner, $extra = '' ) {
+	return catp_connect_b_group( trim( 'catp-card ' . $extra ), $inner );
+}
+/** Core Query Loop over one post type. */
+function catp_connect_b_query( $post_type, $query_id, $inner, $order_by = 'title', $order = 'asc', $per_page = 20 ) {
 	$attrs = array(
-		'queryId' => (int) $query_id,
-		'query'   => array(
-			'perPage'  => 20,
+		'queryId'   => (int) $query_id,
+		'query'     => array(
+			'perPage'  => (int) $per_page,
 			'pages'    => 0,
 			'offset'   => 0,
 			'postType' => $post_type,
@@ -320,67 +356,89 @@ function catp_connect_b_query( $post_type, $query_id, $inner, $order_by = 'title
 			'sticky'   => '',
 			'inherit'  => false,
 		),
+		'className' => 'catp-list',
 	);
-	return '<!-- wp:query ' . wp_json_encode( $attrs ) . ' --><div class="wp-block-query"><!-- wp:post-template -->' . $inner . '<!-- /wp:post-template --></div><!-- /wp:query -->';
+	return '<!-- wp:query ' . wp_json_encode( $attrs ) . ' --><div class="wp-block-query catp-list"><!-- wp:post-template -->' . $inner . '<!-- /wp:post-template --></div><!-- /wp:query -->';
 }
-/** One tab-to-be: a Group with a heading and content. */
-function catp_connect_b_tab( $slug, $label, $inner ) {
-	return sprintf(
-		'<!-- wp:group {"className":"catp-tab catp-tab-%1$s","layout":{"type":"constrained"}} --><div class="wp-block-group catp-tab catp-tab-%1$s">%2$s%3$s</div><!-- /wp:group -->',
-		esc_attr( $slug ),
-		catp_connect_b_heading( $label, 2 ),
-		$inner
-	);
-}
-function catp_connect_b_note( $text ) {
-	return catp_connect_b_para( '<em>' . $text . '</em>' );
+/** Full-width buttons. $buttons = [ [text, href, extraClass], ... ] */
+function catp_connect_b_buttons( $buttons ) {
+	$out = '<!-- wp:buttons {"className":"catp-ctas"} --><div class="wp-block-buttons catp-ctas">';
+	foreach ( $buttons as $b ) {
+		$class = trim( 'catp-cta ' . ( isset( $b[2] ) ? $b[2] : '' ) );
+		$out  .= sprintf(
+			'<!-- wp:button {"className":"%1$s"} --><div class="wp-block-button %1$s"><a class="wp-block-button__link wp-element-button" href="%2$s">%3$s</a></div><!-- /wp:button -->',
+			esc_attr( $class ),
+			esc_url( $b[1] ),
+			esc_html( $b[0] )
+		);
+	}
+	return $out . '</div><!-- /wp:buttons -->';
 }
 function catp_connect_b_tabs_intro( $tabs ) {
-	return catp_connect_b_para(
+	return catp_connect_b_note(
 		'<strong>Setup note (delete once done):</strong> each Group below is one tab: ' . esc_html( implode( ' · ', $tabs ) ) .
 		'. To turn them into real tabs, add a <strong>Stackable → Tabs</strong> block with these tab labels and move each Group into its tab. ' .
-		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field.'
+		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field. ' .
+		'Every Group and paragraph here has a CATP Block Style (sidebar → Styles) — the look comes from assets/catp-app.css in the plugin.'
 	);
 }
 
 function catp_connect_page_skeleton() {
-	$title_only = '<!-- wp:post-title {"level":3,"isLink":false} /-->';
+	$title       = '<!-- wp:post-title {"level":3,"isLink":true} /-->';
+	$post_date   = '<!-- wp:post-date {"format":"F j, Y","className":"catp-eyebrow"} /-->';
+	$badge       = catp_connect_b_group( 'catp-badge', '<!-- wp:post-date {"format":"M","className":"catp-badge-month"} /--><!-- wp:post-date {"format":"d","className":"catp-badge-day"} /-->' );
+	$update_card = catp_connect_b_card( $post_date . $title . '<!-- wp:post-excerpt {"excerptLength":22} /-->' );
+	$event_card  = catp_connect_b_card( $badge . catp_connect_b_eyebrow( 'Event' ) . $title, 'catp-card--event' );
+	$plain_card  = catp_connect_b_card( $title );
 
-	$home = catp_connect_b_heading( 'Notifications', 2 )
-		. catp_connect_b_note( 'Push notifications come from the app-conversion plugin (not chosen yet). Until then this section can list announcements. Keep this above Events on purpose.' )
-		. catp_connect_b_heading( 'Events', 2 )
-		. catp_connect_b_query( 'event', 10, $title_only . '<!-- wp:post-excerpt /-->', 'date', 'desc' )
-		. catp_connect_b_note( 'Add a Meta Field Block for <code>event_date</code> inside the list. Each event card should offer "Volunteer" (→ Get Involved › Volunteer Form with the event pre-selected) and "Participate" (→ Submit Work).' );
+	$home = catp_connect_b_eyebrow( 'Today' )
+		. catp_connect_b_heading( 'Good morning.', 1 )
+		. catp_connect_b_para( 'Your creative week, in one place.', 'catp-sub' )
+		. catp_connect_b_note( 'Notifications will appear at the top of this page once the app/push plugin is chosen (keep them above Events). The date label above is static for now.' )
+		. catp_connect_b_section( 'Stay in the loop', 'Latest updates', 'See all', '#' )
+		. catp_connect_b_query( 'post', 10, $update_card, 'date', 'desc', 2 )
+		. catp_connect_b_note( '"Latest updates" lists normal Posts (news). Point "See all" at the news page once it exists.' )
+		. catp_connect_b_section( 'On the program', 'Upcoming', 'View calendar', '#' )
+		. catp_connect_b_query( 'event', 11, $event_card, 'date', 'asc', 3 )
+		. catp_connect_b_note( 'Events are ordered by their Event Date (the plugin keeps the post date in sync with the ACF field). The "Event" label is static — add an event type field later if needed. Each card should offer "Volunteer" (→ Volunteer Form with the event pre-selected) and "Participate" (→ Submit Work).' )
+		. catp_connect_b_buttons( array(
+			array( 'Reserve a resource', '/resources/', 'catp-cta--calendar' ),
+			array( 'Drop Zone', '/get-involved/', 'catp-cta--camera' ),
+		) )
+		. catp_connect_b_note( 'Button labels are plain text — rename "Drop Zone" once the Board naming is decided.' );
 
-	$resources = catp_connect_b_tabs_intro( array( 'Tutoring', 'Studio', 'Goods', 'Borrow', 'Photo Form' ) )
-		. catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab.' ) )
+	$resources = catp_connect_b_heading( 'Resources', 1 )
+		. catp_connect_b_tabs_intro( array( 'Tutoring', 'Studio', 'Goods', 'Borrow', 'Photo Form' ) )
+		. catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab — the app captures nothing for tutoring.' ) )
 		. catp_connect_b_tab( 'studio', 'Studio', catp_connect_b_note( 'Booking Calendar goes here: 4 fixed slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00), a gear checklist, and the school email as contact. Must also block times taken by regular classes.' ) )
-		. catp_connect_b_tab( 'goods', 'Goods', catp_connect_b_para( 'Price calculator for print materials and merch — nothing is ordered here.' ) . catp_connect_b_query( 'product', 11, $title_only ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>product_size</code>, <code>product_price</code> and <code>product_category</code> inside the list, then a quantity input + running total (front-end script or a calculator block).' ) )
+		. catp_connect_b_tab( 'goods', 'Goods', catp_connect_b_para( 'Price calculator for print materials and merch — nothing is ordered here.' ) . catp_connect_b_query( 'product', 12, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>product_size</code>, <code>product_price</code> and <code>product_category</code> inside each card, then a quantity input + running total.' ) )
 		. catp_connect_b_tab( 'borrow', 'Borrow', catp_connect_b_note( 'WP Inventory Manager goes here: live available / checked-out status of the shared iPads, and the request form. Same-day, in-classroom use only.' ) )
 		. catp_connect_b_tab( 'photo-form', 'Photo Form', catp_connect_b_note( 'Forminator form goes here: school email (@kctcs.edu, required even for a guest), session type (model / photographer), desired date, guest name.' ) );
 
-	$get_involved = catp_connect_b_tabs_intro( array( 'Volunteer Form', 'Submit Work', 'Board' ) )
+	$get_involved = catp_connect_b_heading( 'Get Involved', 1 )
+		. catp_connect_b_tabs_intro( array( 'Volunteer Form', 'Submit Work', 'Board' ) )
 		. catp_connect_b_tab( 'volunteer-form', 'Volunteer Form', catp_connect_b_note( 'Forminator form goes here: school email, request date, event (dropdown), and the "Become a Peer Tutor" request (subject + availability). Say clearly that volunteer hours count toward practicum hours.' ) )
 		. catp_connect_b_tab( 'submit-work', 'Submit Work', catp_connect_b_note( 'Forminator form goes here: name, work type (Ad / Photo / Web), OneDrive folder link (no upload), optional event. Show the file-naming instructions next to the form.' ) )
-		. catp_connect_b_tab( 'board', 'Board', catp_connect_b_query( 'board_post', 12, '<!-- wp:post-featured-image /-->' . $title_only, 'date', 'desc' ) . catp_connect_b_note( 'Image-gallery grid. Add a Meta Field Block for <code>board_post_image</code> (or use the featured image) and one for <code>board_post_display_name</code> with "Anonymous" as the fallback. Never show <code>board_post_email</code>. The submission form (Forminator, Post Creation → Board Posts, as Draft) goes above the grid.' ) );
+		. catp_connect_b_tab( 'board', 'Board', catp_connect_b_query( 'board_post', 13, catp_connect_b_card( '<!-- wp:post-featured-image /-->' . $title ), 'date', 'desc' ) . catp_connect_b_note( 'Image-gallery grid. Add a Meta Field Block for <code>board_post_image</code> (or use the featured image) and one for <code>board_post_display_name</code> with "Anonymous" as the fallback. Never show <code>board_post_email</code>. The submission form (Forminator, Post Creation → Board Posts, as Draft) goes above the grid.' ) );
 
-	$more = catp_connect_b_tabs_intro( array( 'My Program', 'Preparation' ) )
+	$more = catp_connect_b_heading( 'More', 1 )
+		. catp_connect_b_tabs_intro( array( 'My Program', 'Preparation' ) )
 		. catp_connect_b_tab( 'my-program', 'My Program',
-			catp_connect_b_heading( 'Classes', 3 ) . catp_connect_b_query( 'subject', 13, $title_only ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>subject_teachers</code> and <code>subject_location</code>.' )
-			. catp_connect_b_heading( 'Faculty & Staff', 3 ) . catp_connect_b_query( 'teacher', 14, $title_only ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>teacher_title</code> and <code>teacher_office_location</code>.' )
-			. catp_connect_b_heading( 'Peer Tutors', 3 ) . catp_connect_b_query( 'peer_tutor', 15, $title_only ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>peer_tutor_subject</code> and <code>peer_tutor_availability</code>. Never show <code>peer_tutor_school_email</code>.' )
+			catp_connect_b_heading( 'Classes', 3 ) . catp_connect_b_query( 'subject', 14, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>subject_teachers</code> and <code>subject_location</code> inside each card.' )
+			. catp_connect_b_heading( 'Faculty & Staff', 3 ) . catp_connect_b_query( 'teacher', 15, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>teacher_title</code> and <code>teacher_office_location</code>.' )
+			. catp_connect_b_heading( 'Peer Tutors', 3 ) . catp_connect_b_query( 'peer_tutor', 16, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>peer_tutor_subject</code> and <code>peer_tutor_availability</code>. Never show <code>peer_tutor_school_email</code>.' )
 		)
 		. catp_connect_b_tab( 'preparation', 'Preparation', catp_connect_b_note( 'Portfolio-readiness progress bar + NOCTI exam-prep module (game-style, with a streak counter). Not designed yet.' ) );
 
 	return array(
-		'home'         => array( 'title' => 'Home', 'content' => $home ),
-		'resources'    => array( 'title' => 'Resources', 'content' => $resources ),
-		'get-involved' => array( 'title' => 'Get Involved', 'content' => $get_involved ),
-		'more'         => array( 'title' => 'More', 'content' => $more ),
+		'home'         => array( 'title' => 'Home', 'content' => catp_connect_b_group( 'catp-page', $home ) ),
+		'resources'    => array( 'title' => 'Resources', 'content' => catp_connect_b_group( 'catp-page', $resources ) ),
+		'get-involved' => array( 'title' => 'Get Involved', 'content' => catp_connect_b_group( 'catp-page', $get_involved ) ),
+		'more'         => array( 'title' => 'More', 'content' => catp_connect_b_group( 'catp-page', $more ) ),
 	);
 }
 
-function catp_connect_create_page_skeleton() {
+function catp_connect_create_page_skeleton( $overwrite = false ) {
 	$log = array(
 		'title'   => 'Page skeleton',
 		'created' => array(),
@@ -393,7 +451,12 @@ function catp_connect_create_page_skeleton() {
 		$existing = get_page_by_path( $slug, OBJECT, 'page' );
 		if ( $existing ) {
 			$ids[ $slug ] = (int) $existing->ID;
-			$log['skipped'][] = "Page: {$page['title']} (/$slug/)";
+			if ( $overwrite ) {
+				wp_update_post( array( 'ID' => $existing->ID, 'post_content' => $page['content'] ) );
+				$log['created'][] = "Page: {$page['title']} (/$slug/) — content replaced with the fresh skeleton";
+			} else {
+				$log['skipped'][] = "Page: {$page['title']} (/$slug/)";
+			}
 			continue;
 		}
 		$id = wp_insert_post(
@@ -445,8 +508,7 @@ function catp_connect_create_page_skeleton() {
 				);
 			}
 			$log['created'][] = "Menu: $menu_name (Home, Resources, Get Involved, More)";
-			// Attach it to the theme's first menu location if that slot is free.
-			$locations = get_nav_menu_locations();
+			$locations  = get_nav_menu_locations();
 			$registered = array_keys( get_registered_nav_menus() );
 			if ( $registered ) {
 				$first = $registered[0];
@@ -455,10 +517,10 @@ function catp_connect_create_page_skeleton() {
 					set_theme_mod( 'nav_menu_locations', $locations );
 					$log['created'][] = "Menu assigned to theme location \"$first\"";
 				} else {
-					$log['next'][] = "Assign the <strong>$menu_name</strong> menu to the theme's header location (Appearance → Menus) — that slot already had a menu, so it was left alone.";
+					$log['next'][] = "Assign the <strong>$menu_name</strong> menu to the theme's header/footer location (Appearance → Menus) — that slot already had a menu, so it was left alone.";
 				}
 			} else {
-				$log['next'][] = "Assign the <strong>$menu_name</strong> menu to the theme's header location once the theme (Blocksy) is active.";
+				$log['next'][] = "Assign the <strong>$menu_name</strong> menu to the theme's header/footer location once the theme (Blocksy) is active.";
 			}
 		}
 	} else {
@@ -467,5 +529,6 @@ function catp_connect_create_page_skeleton() {
 
 	$log['next'][] = 'Open each page and convert its Groups into a <strong>Stackable → Tabs</strong> block (the setup note at the top of each page says how), then delete the setup notes.';
 	$log['next'][] = 'Drop the Forminator / Booking Calendar / WP Inventory Manager blocks into the tabs whose notes name them.';
+	$log['next'][] = 'For a phone-style bottom bar: Customizer → Footer → add the App Navigation menu, give that footer row the class <code>catp-bottom-nav</code> (the plugin\'s stylesheet pins it to the bottom on phones).';
 	return $log;
 }
