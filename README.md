@@ -11,9 +11,10 @@ This README is the map of the whole project: what the app looks like, how its da
 | Path | What it is | Who uses it |
 |---|---|---|
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
-| `wordpress/acf-field-groups.json` | An [Advanced Custom Fields](https://www.advancedcustomfields.com/) export — importable directly into the site. | **The person filling in content.** Import it once, then it defines the exact fields to fill in for each catalog item (teachers, locations, classes, etc.). |
+| `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code and loads its ACF field groups. Upload it once and the whole data layer exists. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
+| `wordpress/catp-connect/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. The plugin loads this file automatically; it is also importable by hand via Custom Fields → Tools. | **The person filling in content** reads it (via the ACF screens it produces) to know exactly which fields to fill for each catalog item. **Whoever maintains the site** edits it here, in the repo, not in the ACF UI. |
 
-Everything below explains how those two fit together and what actually needs to be built in WordPress.
+Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
 
 ## The core split: catalog data vs. captured data
 
@@ -28,7 +29,7 @@ Concretely, from the schema:
 |---|---|
 | `location`, `teacher`, `subject`, `subject_teacher`, `product`, `event`, `studio_gear`, `photographer` (role flag), `peer_tutor` (**approved** directory only), `equipment` (catalog fields — see note below), `app_setting` (a singleton — see the Tutoring section below) | `studio_booking`, `equipment_request`, `volunteer_request`, `photo_session_request`, `submit_work`, `board_post` (a hybrid case — see its own section below) |
 
-So when the spec says a teacher's name, their office, or a classroom shouldn't come from the front end — that's this split. Those are catalog rows an admin fills in ahead of time; the front end just displays them. A student never types a teacher's name into anything; they *select* a subject, then a specific teacher, from what's already there.
+So when the spec says a teacher's name, their office, or a classroom shouldn't come from the front end — that's this split. Those are catalog rows an admin fills in ahead of time; the front end just displays them. A student never types a teacher's name into anything; they only ever *browse* what's already there.
 
 One nuance worth calling out explicitly: **not everything "front end" goes through Forminator.** Looking at the plugins already chosen:
 
@@ -69,38 +70,43 @@ So "informational on the front end, not typed by a student" is the right mental 
 
 ## Setting this up in WordPress
 
-### 1. Register the custom post types
+### 1. Install Advanced Custom Fields (free)
 
-ACF (the free version used here) defines *fields*, not the post types those fields attach to. Nine catalog/hybrid post types need to exist before importing the JSON below:
+Plugins → Add New → search "Advanced Custom Fields" → install the free one (not "ACF PRO") → activate. Everything below depends on it.
 
-| Post type slug | Label | Supports | Notes |
-|---|---|---|---|
-| `location` | Locations | Title | Also used for teacher offices (Type = "Office"), not just classrooms/studios. |
-| `teacher` | Teachers | Title | |
-| `subject` | Classes / Subjects | Title | "Class" and "subject" are the same thing here. |
-| `product` | Products | Title | |
-| `event` | Events | Title, Editor | Editor = the event description. |
-| `photographer` | Photographers | Title | |
-| `peer_tutor` | Peer Tutors | Title | Public-facing directory — only *approved* tutors. |
-| `board_post` | Board Posts | Title, Editor, Thumbnail | See the Board section below — this one is created *by a form submission*, not by hand. |
-| `app_setting` | App Settings | Title | A singleton — see the Tutoring section below. Free-tier stand-in for an ACF Options Page (PRO-only). |
+### 2. Upload and activate the CATP Connect plugin
 
-You have two ways to register these without writing a plugin from scratch:
+`wordpress/catp-connect/` in this repo is a small WordPress plugin. It registers all nine custom post types in code and loads the ACF field groups from the `acf-field-groups.json` it ships with — so there is nothing to click through in Custom Post Type UI and nothing to import by hand.
 
-- **No-code option:** install the free **Custom Post Type UI** plugin and add each row above through its "Add New Post Type" screen (a couple of minutes each). This wasn't in the original tools list — it's a small addition worth calling out, but it's free and does exactly this one job well.
-- **Code option:** a short `register_post_type()` snippet per type, added via a small custom plugin or a snippets plugin (e.g. Code Snippets). Slightly more setup once, but keeps you to one fewer plugin.
+1. Zip the folder — from the repo root: `cd wordpress && zip -r catp-connect.zip catp-connect`.
+2. Plugins → Add New → Upload Plugin → choose `catp-connect.zip` → Install Now → Activate.
+3. The admin menu now shows Locations, Teachers, Classes / Subjects, Products, Events, Photographers, Peer Tutors, Board Posts and App Settings, and Custom Fields → Field Groups lists the nine groups. They appear there as read-only (loaded from the plugin) **on purpose**: to change a field, edit `acf-field-groups.json` in the repo and re-upload the plugin, so the configuration stays versioned instead of living only in one site's database.
 
-Either way, set `public` and `show_ui` to true (so they show up in wp-admin), and you generally do **not** need `has_archive` — students never browse a public "/location/" listing page directly; the app screens query these post types on their own. `board_post` is the one exception worth a second look: it needs `show_in_rest` enabled if Forminator's Post Creation feature requires it to write into that post type.
+| Post type slug | Label | Supports | Public / REST | Notes |
+|---|---|---|---|---|
+| `location` | Locations | Title | yes | Also used for teacher offices (Type = "Office"). |
+| `teacher` | Teachers | Title | yes | |
+| `subject` | Classes / Subjects | Title | yes | "Class" and "subject" are the same thing here. |
+| `product` | Products | Title | yes | |
+| `event` | Events | Title, Editor | yes | Editor = the event description. |
+| `photographer` | Photographers | Title | **no** | Post titles are student emails — kept out of the front end and the REST API entirely. |
+| `peer_tutor` | Peer Tutors | Title | yes | Public directory — only *approved* tutors. |
+| `board_post` | Board Posts | Title, Editor, Thumbnail | yes | Created *by the Board form* (Forminator Post Creation), not by hand. |
+| `app_setting` | App Settings | Title | **no** | A singleton — see the App Settings section below. |
 
-### 2. Import the ACF field groups
+"Public / REST = yes" is what lets WordPress's own Query Loop block list that type on the front end. The two private types never reach `/wp-json`.
 
-Once the post types above exist:
+This plugin was verified on a real WordPress 7.1 + ACF 6.8.9 install: all nine types register, all nine groups load with the expected field counts, and the fields round-trip (a subject with three teachers, a teacher with title + office, a product with price, the Tutoring URL via its shortcode).
 
-1. `Custom Fields → Tools → Import Field Groups` in wp-admin.
-2. Upload `wordpress/acf-field-groups.json`.
-3. You'll see 9 field groups appear: Location, Teacher, Class/Subject, Product, Event, Photographer, Peer Tutor, Board Post, App Setting.
+**Manual alternative, if you'd rather not upload a plugin:** install the free Custom Post Type UI plugin, create the nine post types from the table above by hand, then Custom Fields → Tools → Import Field Groups → upload `wordpress/catp-connect/acf-field-groups.json`. Same end result, more clicking, and the configuration then exists only in that site's database.
 
-### 3. What to actually type into each one
+### 3. Install Meta Field Block (to show ACF values on the front end)
+
+Showing an ACF field's *value* on a page is a paid feature everywhere you'd expect it to be free: Kadence Pro, Stackable Premium, Blocksy Pro, and even ACF's own Block Bindings integration all require the paid tier. **Meta Field Block** (free, on wordpress.org) is the free route: a single block that prints one custom field, and it nests inside WordPress's own **Query Loop** block. So "list every subject with its classroom" is: a Query Loop (post type = Classes / Subjects) → inside it, the post title plus a Meta Field Block set to `subject_location`. No Pro anywhere in the stack.
+
+One thing to check on the real site before building around it: `subject_teachers` is a *multiple* Post Object field (one subject, several teachers). Meta Field Block documents rendering Relationship/Post Object fields "as a Query Loop" — confirm the free tier does that for the three-teacher case. If it doesn't, show the relation from the teacher side instead (each teacher lists their subject, a single Post Object, which the free tier handles).
+
+### 4. What to actually type into each one
 
 This is the part meant for whoever is filling in content, not necessarily writing code:
 
@@ -167,7 +173,7 @@ A post existing here **is** the approval — there's no separate "status" toggle
 
 Approving a post is just **publishing it** — clicking Publish on the Draft the form created. There's no separate status field to flip; WordPress's own draft/publish state *is* the pending/approved state. Reject (or just leave as Draft) only for anything discriminatory or disrespectful — the bar is deliberately low otherwise.
 
-**App Settings** — This is where the Tutoring external link lives. Create **exactly one** post here (e.g. titled "App Settings") and never a second one — it's a stand-in for an ACF Options Page, which is normally the natural place for a single global value like this, but Options Pages are ACF PRO-only. A dedicated singleton post type gets the same result for free, without depending on a specific Page's ID (which doesn't exist yet at JSON-authoring time). One field: *Tutoring External URL* — the program's existing "Request Tutoring" page, which already routes to the correct Microsoft Bookings link. The Tutoring tab in the app is just a button that opens whatever URL is in this field.
+**App Settings** — This is where the Tutoring external link lives. Create **exactly one** post here (e.g. titled "App Settings") and never a second one — it's a stand-in for an ACF Options Page, which is normally the natural place for a single global value like this, but Options Pages are ACF PRO-only. A dedicated singleton post type gets the same result for free, without depending on a specific Page's ID (which doesn't exist yet at JSON-authoring time). One field: *Tutoring External URL* — the program's existing "Request Tutoring" page, which already routes to the correct Microsoft Bookings link. The Tutoring tab in the app is just a button that opens whatever URL is in this field — the plugin provides it as a shortcode: paste `[catp_tutoring_button text="Request Tutoring"]` into the Tutoring tab and it renders that button (it renders nothing at all until the URL has been filled in).
 
 ### Why no custom taxonomies?
 
@@ -188,15 +194,15 @@ See `database/schema.sql` for the full relational model — every table, column,
 | Feature | Tool |
 |---|---|
 | Theme | Blocksy |
-| Tabs | Kadence Blocks |
+| Tabs / layout | Kadence Blocks *or* Stackable — their free tiers are equivalent for what this app needs (tabs, listing post types); not finalized, see Pending decisions |
 | Volunteer form, Photo form, Submit Work | Forminator |
 | Board | Forminator, using its Post Creation feature to write into the `board_post` CPT |
 | Studio booking | Booking Calendar (wpdevelop) |
-| Tutoring | No plugin — a static external link (Microsoft Bookings, via the program's existing "Request Tutoring" page), stored in one ACF field on a singleton `app_setting` post |
+| Tutoring | No plugin — a static external link (Microsoft Bookings, via the program's existing "Request Tutoring" page), stored in one ACF field on a singleton `app_setting` post and rendered by the `[catp_tutoring_button]` shortcode |
 | Goods | No plugin — a pure calculator reading the `product` catalog; nothing is captured |
 | Borrow (equipment lending) | WP Inventory Manager |
-| Catalog data (locations, teachers, classes, products, events, photographer role, approved peer tutors, app settings) | Custom post types + ACF (this repo's `wordpress/acf-field-groups.json`) |
-| Registering the custom post types above | Custom Post Type UI (no-code) *or* a short `register_post_type()` snippet — not finalized, see setup section above |
+| Catalog data (locations, teachers, classes, products, events, photographer role, approved peer tutors, app settings) | The `catp-connect` plugin (this repo's `wordpress/catp-connect/`) + Advanced Custom Fields (free) |
+| Showing ACF field values on the front end | Meta Field Block (free), nested in WordPress's core Query Loop block — see setup step 3 |
 
 ## Pending decisions
 
@@ -204,5 +210,6 @@ See `database/schema.sql` for the full relational model — every table, column,
 - Exact large-board size and its dry-mount-tissue pricing.
 - Whether an envelope is required for every submission type.
 - How a student becomes a "photographer" — no review/approval step has been described for this role, unlike peer tutoring.
-- Custom Post Type UI vs. a code snippet for registering the catalog post types.
+- Block library: Kadence Blocks (the original plan) vs. Stackable (the supervisor's suggestion). Verified equivalent for this app on the free tier — tabs and post-type listing in both, ACF dynamic content paid in both — so it's a team-preference call.
+- Confirm Meta Field Block's free tier renders the multi-teacher `subject_teachers` field; if not, show that relation from the teacher side (see setup step 3).
 - Whether `board_post.image_url` should be a native ACF Image upload (what's currently modeled) or, to stay consistent with Submit Work's "paste a link, no upload" pattern, a pasted image URL instead.
