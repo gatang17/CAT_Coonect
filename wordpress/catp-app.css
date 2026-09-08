@@ -44,6 +44,7 @@
   --catp-gap:        12px;      /* space between cards */
   --catp-pad:        20px;      /* padding inside cards */
   --catp-maxw:       720px;     /* content column width (phone-like) */
+  --catp-nav-w:      232px;     /* width of the desktop navigation column */
 }
 
 /* 2. BASE — plain elements inside app pages, no classes needed ----------- */
@@ -251,23 +252,46 @@
   .catp-app { padding-bottom: 84px; }
 }
 
-/* DESKTOP — rail down the left */
+/* DESKTOP — a column of boxed buttons down the left. Each one is a bordered
+   card with the icon beside the label, and the page you are on is filled
+   solid. Wider than a phone rail because the labels are read, not guessed. */
 @media (min-width: 900px) {
   .catp-appnav {
     top: 0; bottom: 0; left: 0;
-    width: 96px;
+    width: var(--catp-nav-w);
     flex-direction: column;
     justify-content: flex-start;
-    gap: 2px;
-    padding: 24px 8px;
-    border-right: var(--catp-border) solid var(--catp-line);
+    gap: 10px;
+    padding: 28px 20px;
+    border-right: 0;
     overflow-y: auto;
   }
-  .catp-appnav ul { flex-direction: column; flex: 0 0 auto; width: 100%; }
+  .catp-appnav ul { flex-direction: column; flex: 0 0 auto; width: 100%; gap: 10px; }
   .catp-appnav li { flex: 0 0 auto; }
   .catp-appnav a,
-  .catp-appnav .wp-block-button__link { flex: 0 0 auto; padding: 12px 4px; }
-  .catp-app { padding-left: 96px; }
+  .catp-appnav .wp-block-button__link {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border: var(--catp-border) solid var(--catp-line);
+    border-radius: var(--catp-radius);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--catp-ink);
+    text-align: left;
+  }
+  .catp-appnav a:hover { border-color: var(--catp-ink); }
+  /* the current page: filled, so it reads at a glance */
+  .catp-appnav .current-menu-item > a,
+  .catp-appnav [aria-current="page"] {
+    background: var(--catp-ink);
+    border-color: var(--catp-ink);
+    color: var(--catp-paper);
+  }
+  .catp-appnav svg { width: 20px; height: 20px; }
+  .catp-app { padding-left: var(--catp-nav-w); }
 }
 
 /* The wordmark. Put it on a Paragraph or Heading: "CATP+" — wrap the "+" in
@@ -290,13 +314,13 @@
    brand paragraph, a Group with h1+p, and the icon. */
 .catp-page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin: 0 0 28px;
   padding-top: 20px;
 }
-.catp-page-header > *:first-child { flex-basis: 100%; margin-bottom: 12px; }
+.catp-page-header > .catp-brand { flex: 0 0 auto; align-self: center; margin-right: 4px; }
 .catp-page-header h1 { margin: 0 0 4px; }
 .catp-page-header p  { margin: 0; color: var(--catp-ink-soft); font-size: 14px; }
 .catp-page-header .catp-page-header-copy { flex: 1 1 auto; min-width: 0; }
@@ -367,14 +391,57 @@
    big top margin the standalone version needs */
 .catp-tabs [role="tabpanel"] > *:first-child { margin-top: 0; }
 
+/* SEGMENTED — the top level on Resources: two or three equal halves filling
+   the width, the active one solid. Add `catp-tabs--segment` to the Tabs block.
+   This is a different job from the underlined strip: it switches between
+   whole modes of a page, so it is meant to be impossible to miss. */
+.catp-tabs--segment [role="tablist"],
+.catp-tabs--segment .catp-tablist {
+  gap: 0;
+  padding: 0;
+  border: var(--catp-border) solid var(--catp-line);
+  border-radius: var(--catp-radius);
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.catp-tabs--segment [role="tab"] {
+  flex: 1 1 0;
+  justify-content: center;
+  text-align: center;
+  padding: 15px 12px;
+  border-bottom: 0;
+  border-radius: 0;
+  font-weight: 500;
+  font-size: 14px;
+}
+.catp-tabs--segment [role="tab"] + [role="tab"] { border-left: var(--catp-border) solid var(--catp-line); }
+.catp-tabs--segment [role="tab"][aria-selected="true"] {
+  background: var(--catp-ink);
+  color: var(--catp-paper);
+  font-weight: 600;
+}
+
 /* SECOND LEVEL — smaller, no rule under it, sits closer to its parent */
 .catp-tabs--sub [role="tablist"],
 .catp-tabs--sub .catp-tablist {
-  gap: 18px;
-  border-bottom: 0;
-  margin-bottom: 18px;
+  gap: 4px;
+  border-bottom: var(--catp-border) solid var(--catp-line);
+  margin: 14px 0 22px;
+  padding: 0;
 }
-.catp-tabs--sub [role="tab"] { font-size: 13px; padding: 4px 0; }
+.catp-tabs--sub [role="tab"] {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-bottom: 0;
+  border-radius: var(--catp-radius) var(--catp-radius) 0 0;
+}
+/* the active sub-tab is filled rather than underlined, so the two levels
+   never look like the same control at different sizes */
+.catp-tabs--sub [role="tab"][aria-selected="true"] {
+  background: var(--catp-ink);
+  color: var(--catp-paper);
+  border-bottom-color: transparent;
+}
 
 /* PILL STYLE — for the Updates / Drop Zone switch on Home */
 .catp-tabs--pill [role="tablist"],
