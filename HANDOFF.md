@@ -2,7 +2,7 @@
 
 You're picking up a WordPress project that has its **data layer built and installed** but **no content entered and no pages designed yet**. This file tells you exactly where things stand and what to do first. The full map of the project is `README.md`; read this first, then that.
 
-Last updated: September 2026.
+Last updated: September 2026 (after the starter catalog and page skeleton were loaded on the live site).
 
 ## What exists today
 
@@ -16,23 +16,25 @@ Last updated: September 2026.
 
 **On the live site** (Hostinger, `catconnect.gatangdesigns.io`) — as of this handoff:
 
-| Installed | Not yet installed |
+| Done | Not yet done |
 |---|---|
-| Advanced Custom Fields (free) | Blocksy (theme) |
-| CATP Connect plugin **v0.1.0** — you need to update it to **v0.2.0** (step 2 below) | Stackable (blocks) |
-| Meta Field Block | Forminator, Booking Calendar, WP Inventory Manager |
-| | The app-conversion / push-notifications plugin (undecided) |
+| Advanced Custom Fields (free) installed | Stackable (blocks) — install it |
+| CATP Connect plugin **v0.2.0** installed | Forminator, Booking Calendar, WP Inventory Manager — install them |
+| Meta Field Block installed | The app-conversion / push-notifications plugin (undecided) |
+| Blocksy theme active | Classrooms/studios, the Classroom of each subject, the Tutoring URL, Large board size/price — nobody had these yet |
+| **Starter catalog loaded**: 6 offices, 11 teachers, 4 subjects, 6 products | Converting the page sections into Stackable tabs, adding the Meta Field Blocks, building the forms |
+| **Page skeleton created**: Home / Resources / Get Involved / More, Home is the front page, "App Navigation" menu exists | |
 
-No catalog content has been entered and no pages exist yet. That's intentional — it was left for you, and most of it is one click.
+So the data layer and the page structure exist; what's left is content that wasn't known yet, and the front-end build.
 
 ## Your first session, in order
 
 1. **Get an admin account** from your supervisor (a user for you — don't reuse someone else's password).
-2. **Update the plugin to v0.2.0.** From the repo: `cd wordpress && zip -r catp-connect.zip catp-connect`. In wp-admin: Plugins → Add New → Upload Plugin → choose the zip → WordPress will say a version already exists → **Replace current with uploaded**. Confirm "App Settings → Setup Tools" now appears in the menu.
-3. **Install and activate the Blocksy theme** (Appearance → Themes → Add New). Do this *before* step 5 so the navigation menu the skeleton creates can attach to Blocksy's header.
-4. **Install and activate:** Stackable (free), Forminator, Booking Calendar (by wpdevelop), WP Inventory Manager. All free, all from Plugins → Add New.
-5. **App Settings → Setup Tools → "Load starter catalog"**, then **"Create page skeleton"**. Both are safe to press again later — they skip anything that already exists. After this you have: 6 offices, 11 teachers with titles/offices, the 4 subjects linked to their teachers, 6 products with prices; and the pages Home / Resources / Get Involved / More, with Home as the front page and an "App Navigation" menu.
-6. **Fill in what the seeder couldn't know** (it tells you this on screen too):
+2. **Look around first.** The front page should be "Home"; the header menu should show Home · Resources · Get Involved · More (if it doesn't, Appearance → Menus → assign "App Navigation" to Blocksy's header location). Locations / Teachers / Classes / Products already have entries. App Settings → Setup Tools is where those came from — both buttons are safe to press again; they skip what already exists.
+3. **Install and activate:** Stackable (free), Forminator, Booking Calendar (by wpdevelop), WP Inventory Manager. All free, all from Plugins → Add New.
+4. *(The plugin, the theme, the starter catalog and the page skeleton are already done — skip ahead.)*
+5. *(Same.)*
+6. **Fill in what the setup couldn't know** (Setup Tools lists this too):
    - Add the **classrooms/studios** as Locations (Type = "Classroom" or "Studio") — nobody had the room list yet.
    - Open each of the 4 Classes / Subjects and pick its **Classroom** (the field is required, so the screen will insist).
    - Confirm the **Large board** size and price (seeded as placeholders: 15x20, $3.00).
