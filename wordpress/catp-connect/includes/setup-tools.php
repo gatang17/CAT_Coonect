@@ -463,11 +463,16 @@ function catp_connect_page_skeleton( $nav_ref = 0 ) {
 	$event_card  = catp_connect_b_card( $badge . catp_connect_b_eyebrow( 'Event' ) . $title, 'catp-card--event' );
 	$plain_card  = catp_connect_b_card( $title );
 
-	$home = catp_connect_b_eyebrow( 'Today' )
+	// Home's greeting is not a `catp-page-header`: it is a full-width welcome,
+	// so it keeps its own eyebrow + h1 + subtitle.
+	$home_intro = catp_connect_b_eyebrow( 'Today' )
 		. catp_connect_b_heading( 'Good morning.', 1 )
 		. catp_connect_b_para( 'Your creative week, in one place.', 'catp-sub' )
-		. catp_connect_b_note( 'Notifications will appear at the top of this page once the app/push plugin is chosen (keep them above Events). The date label above is static for now.' )
-		. catp_connect_b_section( 'Stay in the loop', 'Latest updates', 'See all', '#' )
+		. catp_connect_b_note( 'The date label above is static for now. Notifications will appear under it once the app/push plugin is chosen.' );
+
+	// Tab 1 — Updates: the news and what is coming up.
+	$home_updates = catp_connect_b_tab( 'updates', 'Updates',
+		catp_connect_b_section( 'Stay in the loop', 'Latest updates', 'See all', '#' )
 		. catp_connect_b_query( 'post', 10, $update_card, 'date', 'desc', 2 )
 		. catp_connect_b_note( '"Latest updates" lists normal Posts (news). Point "See all" at the news page once it exists.' )
 		. catp_connect_b_section( 'On the program', 'Upcoming', 'View calendar', '#' )
@@ -475,9 +480,26 @@ function catp_connect_page_skeleton( $nav_ref = 0 ) {
 		. catp_connect_b_note( 'Events are ordered by their Event Date (the plugin keeps the post date in sync with the ACF field). The "Event" label is static — add an event type field later if needed. Each card should offer "Volunteer" (→ Volunteer Form with the event pre-selected) and "Participate" (→ Submit Work).' )
 		. catp_connect_b_buttons( array(
 			array( 'Reserve a resource', '/resources/', 'catp-cta--calendar' ),
-			array( 'Drop Zone', '/get-involved/', 'catp-cta--camera' ),
 		) )
-		. catp_connect_b_note( 'Button labels are plain text — rename "Drop Zone" once the Board naming is decided.' );
+	);
+
+	// Tab 2 — Drop Zone: the same approved Board Posts as Get Involved → Board,
+	// surfaced on Home because that is where students look first. One post type,
+	// two places: publishing a Board Post is still the single approval step.
+	$home_dropzone = catp_connect_b_tab( 'drop-zone', 'Drop Zone',
+		catp_connect_b_section( 'Student work', 'Fresh off the board' )
+		. catp_connect_b_query( 'board_post', 17, catp_connect_b_card( '<!-- wp:post-featured-image /-->' . $title ), 'date', 'desc', 6 )
+		. catp_connect_b_note( 'Same posts as Get Involved → Board, newest first. Add a Meta Field Block for <code>board_post_display_name</code> ("Anonymous" when empty). Never show <code>board_post_email</code>.' )
+		. catp_connect_b_buttons( array(
+			array( 'Submit your work', '/get-involved/', 'catp-cta--camera' ),
+		) )
+		. catp_connect_b_note( 'The submission form itself lives in Get Involved → Board (Forminator → Post Creation, saved as Draft). This button just sends people there, so there is only one form to maintain. "Drop Zone" is a label — rename it here and in the nav once the Board naming is decided.' )
+	);
+
+	$home = $home_intro
+		. catp_connect_b_note( '<strong>Setup note (delete once done):</strong> the two Groups below are Home\'s top tabs: Updates · Drop Zone. Add a <strong>Stackable → Tabs</strong> block with those labels, give it the class <code>catp-tabs catp-tabs--pill</code> (the rounded switch), and move each Group into its tab.' )
+		. $home_updates
+		. $home_dropzone;
 
 	$resources = catp_connect_b_page_header( 'Resources', 'Make space for the work.' )
 		. catp_connect_b_tabs_intro( array( 'Tutoring', 'Studio', 'Goods', 'Borrow', 'Photo Form' ) )
