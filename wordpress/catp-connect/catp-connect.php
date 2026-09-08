@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       CATP Connect
  * Plugin URI:        https://github.com/gatang17/CAT_Coonect
- * Description:       Data layer for the CATP Connect companion app: registers its custom post types and loads its ACF field groups from acf-field-groups.json. Also provides the [catp_tutoring_button] shortcode.
- * Version:           0.1.0
+ * Description:       Data layer for the CATP Connect companion app: registers its custom post types, loads its ACF field groups from acf-field-groups.json, provides the [catp_tutoring_button] shortcode, and one-click Setup Tools (starter catalog, page skeleton) under App Settings.
+ * Version:           0.2.0
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Requires Plugins:  advanced-custom-fields
@@ -14,8 +14,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CATP_CONNECT_VERSION', '0.1.0' );
+define( 'CATP_CONNECT_VERSION', '0.2.0' );
 define( 'CATP_CONNECT_DIR', plugin_dir_path( __FILE__ ) );
+
+require_once CATP_CONNECT_DIR . 'includes/setup-tools.php';
 
 /**
  * The app's custom post types.

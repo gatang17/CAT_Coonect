@@ -4,6 +4,8 @@ Companion app for the Communication Arts Technology Program (CATP). It's built a
 
 No login or user accounts exist for any user type. No greetings by name, no avatars, no personalization. The only identifier used anywhere in the app is a **school email address** (`@kctcs.edu`), validated with a simple domain check — a plain pattern rule, not a roster lookup or a paid verification service.
 
+**New to the project? Read `HANDOFF.md` first** — it says what's installed, what's not, and what to do in your first session.
+
 This README is the map of the whole project: what the app looks like, how its data is split between "things an admin sets up once" and "things students submit," and how to actually configure that in WordPress.
 
 ## How this repo is organized
@@ -11,7 +13,7 @@ This README is the map of the whole project: what the app looks like, how its da
 | Path | What it is | Who uses it |
 |---|---|---|
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
-| `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code and loads its ACF field groups. Upload it once and the whole data layer exists. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
+| `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the four app pages with one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
 | `wordpress/catp-connect/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. The plugin loads this file automatically; it is also importable by hand via Custom Fields → Tools. | **The person filling in content** reads it (via the ACF screens it produces) to know exactly which fields to fill for each catalog item. **Whoever maintains the site** edits it here, in the repo, not in the ACF UI. |
 
 Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
@@ -80,7 +82,8 @@ Plugins → Add New → search "Advanced Custom Fields" → install the free one
 
 1. Zip the folder — from the repo root: `cd wordpress && zip -r catp-connect.zip catp-connect`.
 2. Plugins → Add New → Upload Plugin → choose `catp-connect.zip` → Install Now → Activate.
-3. The admin menu now shows Locations, Teachers, Classes / Subjects, Products, Events, Photographers, Peer Tutors, Board Posts and App Settings, and Custom Fields → Field Groups lists the nine groups. They appear there as read-only (loaded from the plugin) **on purpose**: to change a field, edit `acf-field-groups.json` in the repo and re-upload the plugin, so the configuration stays versioned instead of living only in one site's database.
+3. The admin menu now shows Locations, Teachers, Classes / Subjects, Products, Events, Photographers, Peer Tutors, Board Posts and App Settings, and Custom Fields → Field Groups lists the nine groups.
+4. **App Settings → Setup Tools** has two buttons, both safe to press repeatedly (they skip what already exists): **Load starter catalog** creates the faculty offices, the 11 teachers with titles/offices, the 4 subjects linked to their teachers, and the 6 products; **Create page skeleton** creates Home / Resources / Get Involved / More with one Group per tab (built from core blocks, ready to be converted into Stackable Tabs), sets Home as the front page and builds an "App Navigation" menu. Activate the theme first so the menu can attach to it. What the buttons can't know (classrooms, the Tutoring URL, Large board's real size) they list on screen as "still to do by hand". They appear there as read-only (loaded from the plugin) **on purpose**: to change a field, edit `acf-field-groups.json` in the repo and re-upload the plugin, so the configuration stays versioned instead of living only in one site's database.
 
 | Post type slug | Label | Supports | Public / REST | Notes |
 |---|---|---|---|---|
@@ -194,7 +197,7 @@ See `database/schema.sql` for the full relational model — every table, column,
 | Feature | Tool |
 |---|---|
 | Theme | Blocksy |
-| Tabs / layout | Kadence Blocks *or* Stackable — their free tiers are equivalent for what this app needs (tabs, listing post types); not finalized, see Pending decisions |
+| Tabs / layout | Stackable (free). Its free tier covers what the app needs — tabs and listing post types; Kadence Blocks would have too, Stackable was the supervisor's call |
 | Volunteer form, Photo form, Submit Work | Forminator |
 | Board | Forminator, using its Post Creation feature to write into the `board_post` CPT |
 | Studio booking | Booking Calendar (wpdevelop) |
@@ -210,6 +213,5 @@ See `database/schema.sql` for the full relational model — every table, column,
 - Exact large-board size and its dry-mount-tissue pricing.
 - Whether an envelope is required for every submission type.
 - How a student becomes a "photographer" — no review/approval step has been described for this role, unlike peer tutoring.
-- Block library: Kadence Blocks (the original plan) vs. Stackable (the supervisor's suggestion). Verified equivalent for this app on the free tier — tabs and post-type listing in both, ACF dynamic content paid in both — so it's a team-preference call.
 - Confirm Meta Field Block's free tier renders the multi-teacher `subject_teachers` field; if not, show that relation from the teacher side (see setup step 3).
 - Whether `board_post.image_url` should be a native ACF Image upload (what's currently modeled) or, to stay consistent with Submit Work's "paste a link, no upload" pattern, a pasted image URL instead.
