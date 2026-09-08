@@ -8,6 +8,8 @@
 -- teacher, subject, subject_teacher, product, event, photographer,
 -- peer_tutor, board_post) are physically implemented as WordPress custom
 -- post types + ACF fields, not raw SQL tables — see wordpress/ for that.
+-- (wordpress/ also holds one more thing with no table here at all: a
+-- singleton `app_setting` post carrying the Tutoring external link.)
 -- They're still modeled here as tables because this file's job is to be
 -- the one place that defines the "correct" shape of the data and its
 -- relationships, independent of which plugin or WordPress feature ends
@@ -31,6 +33,17 @@
 --     roster lookup or paid service. The CHECK constraint on `student`
 --     below is a DB-level backstop for the same rule, not a replacement
 --     for the form-layer check.
+--   - Tutoring is NOT modeled here at all. It used to be (a
+--     tutoring_booking table with a composite FK into subject_teacher),
+--     but the feature was cut: Tutoring is now a single static external
+--     link (to the program's existing Microsoft Bookings page), held in
+--     one ACF field on a singleton `app_setting` post — see wordpress/.
+--     No database entity needed for that.
+--   - Goods is a pure calculator, not a request/reservation system —
+--     there used to be `order`/`order_product` tables for a "submit this
+--     supply request" flow; that flow was cut. `product` (below) still
+--     exists because the calculator needs the pricing data, but nothing
+--     a student does in Goods gets written anywhere.
 --   - `product`: exact large-board size and whether dry mount tissue has
 --     a different price for it are still open. Schema is unaffected —
 --     these are just row values in `product`, not structural.
@@ -40,16 +53,15 @@
 --     directly on `school_email` — no independent surrogate key.
 --   - `subject` <-> `teacher` is many-to-many (real faculty data showed
 --     e.g. 3 teachers for Advertising Design), via the `subject_teacher`
---     bridge. `tutoring_booking` carries its own `teacher_id` because the
---     student picks a specific teacher after picking the subject — it's
---     no longer implied by the subject alone.
+--     bridge. This still matters with Tutoring gone: it's what backs the
+--     My Program directory and Peer Tutor subject matching.
 --   - `board_post` is captured from the front end (a submission) but
 --     moderated through ACF/wp-admin like catalog data — see its own
 --     comment below for how that's expected to work physically.
 --   - How a student earns the `photographer` role isn't decided (no
 --     review step described, unlike peer tutoring).
 --   - Envelope-per-submission and other Goods pricing rules are business
---     logic, not schema — enforced in the ordering UI/plugin, not here.
+--     logic, not schema — enforced in the calculator UI, not here.
 -- =====================================================================
 
 SET NAMES utf8mb4;
@@ -115,8 +127,9 @@ CREATE TABLE IF NOT EXISTS `subject_teacher` (
   `subject_id` INT UNSIGNED NOT NULL,
   `teacher_id` INT UNSIGNED NOT NULL,
   -- Many-to-many: real faculty data showed multiple teachers per subject
-  -- (e.g. 3 for Advertising Design). This PK also doubles as the target
-  -- of the composite FK from tutoring_booking below.
+  -- (e.g. 3 for Advertising Design). Backs the My Program directory and
+  -- Peer Tutor subject matching — Tutoring itself no longer uses this
+  -- table at all (see the header comment above).
   PRIMARY KEY (`subject_id`, `teacher_id`),
   KEY `idx_subject_teacher_teacher` (`teacher_id`),
   CONSTRAINT `fk_subject_teacher_subject`
@@ -181,33 +194,6 @@ CREATE TABLE IF NOT EXISTS `studio_gear` (
 -- Transactional tables
 -- ---------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS `tutoring_booking` (
-  `booking_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `school_email` VARCHAR(150) NOT NULL,
-  `subject_id` INT UNSIGNED NOT NULL,
-  `teacher_id` INT UNSIGNED NOT NULL,
-  -- The student picks a specific teacher after picking the subject —
-  -- no longer implied by the subject alone now that subject_teacher is
-  -- many-to-many. The composite FK below guarantees the chosen teacher
-  -- actually teaches the chosen subject; there's deliberately no plain
-  -- single-column FK on subject_id, since the composite one already
-  -- guarantees subject_id is valid (transitively, through
-  -- subject_teacher's own FK to subject).
-  `date` DATE NOT NULL,
-  `time` TIME NOT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`booking_id`),
-  KEY `idx_tutoring_booking_email` (`school_email`),
-  KEY `idx_tutoring_booking_subject_teacher` (`subject_id`, `teacher_id`),
-  KEY `idx_tutoring_booking_date_time` (`date`, `time`),
-  CONSTRAINT `fk_tutoring_booking_student`
-    FOREIGN KEY (`school_email`) REFERENCES `student` (`school_email`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_tutoring_booking_subject_teacher`
-    FOREIGN KEY (`subject_id`, `teacher_id`) REFERENCES `subject_teacher` (`subject_id`, `teacher_id`)
-    ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE IF NOT EXISTS `studio_booking` (
   `booking_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `school_email` VARCHAR(150) NOT NULL,
@@ -261,33 +247,6 @@ CREATE TABLE IF NOT EXISTS `equipment_request` (
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_equipment_request_location`
     FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`)
-    ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- `order` is a reserved SQL keyword — always backtick-quote it.
-CREATE TABLE IF NOT EXISTS `order` (
-  `order_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `school_email` VARCHAR(150) NOT NULL,
-  `date` DATE NOT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`order_id`),
-  KEY `idx_order_email` (`school_email`),
-  CONSTRAINT `fk_order_student`
-    FOREIGN KEY (`school_email`) REFERENCES `student` (`school_email`)
-    ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS `order_product` (
-  `order_id` INT UNSIGNED NOT NULL,
-  `product_id` INT UNSIGNED NOT NULL,
-  `quantity` SMALLINT UNSIGNED NOT NULL DEFAULT 1,
-  PRIMARY KEY (`order_id`, `product_id`),
-  KEY `idx_order_product_product` (`product_id`),
-  CONSTRAINT `fk_order_product_order`
-    FOREIGN KEY (`order_id`) REFERENCES `order` (`order_id`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_order_product_product`
-    FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -126,7 +126,7 @@
     "instruction_placement": "label",
     "hide_on_screen": "",
     "active": true,
-    "description": "Post Title = the class/subject name (Advertising Design, Web Design, Photography, or Digital Video). This CPT is informational only — it does not drive the actual booking calendar. A student picks a specific teacher when booking (Tutoring booking now carries its own teacher, not one implied by the subject); that real availability is configured separately inside the MotoPress Appointment Booking plugin's own Employee/Service setup. Keep teacher and subject names consistent between the two so they don't look like different people/classes to a visitor, but they are two separate systems."
+    "description": "Post Title = the class/subject name (Advertising Design, Web Design, Photography, or Digital Video). This CPT is informational only — it feeds the My Program directory and Peer Tutor subject matching (each teacher's classroom lookup, and a peer tutor's inherited classroom, both come from here). Tutoring itself no longer uses this catalog at all — it's a single external link, see the App Settings group below."
   },
   {
     "key": "group_catp_product",
@@ -393,5 +393,34 @@
     "hide_on_screen": "",
     "active": true,
     "description": "Post Title = the post's title, submitted by the student. A submission arrives here as a Draft (via Forminator's Post Creation feature) — publishing the post IS the approval; there's no separate status field to also remember to set. Approval bar is deliberately low: reject/leave as Draft only if discriminatory or disrespectful."
+  },
+  {
+    "key": "group_catp_app_setting",
+    "title": "App Setting Details",
+    "fields": [
+      {
+        "key": "field_catp_app_setting_tutoring_url",
+        "label": "Tutoring External URL",
+        "name": "tutoring_external_url",
+        "type": "url",
+        "instructions": "The program's existing \"Request Tutoring\" page, which already routes to the correct Microsoft Bookings link. The Tutoring tab in the app is just a button that opens this URL — no form, no calendar, no data model.",
+        "required": 1,
+        "conditional_logic": 0,
+        "wrapper": { "width": "", "class": "", "id": "" },
+        "default_value": "",
+        "placeholder": "https://..."
+      }
+    ],
+    "location": [
+      [{ "param": "post_type", "operator": "==", "value": "app_setting" }]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "This is a free-tier stand-in for an ACF Options Page (Options Pages are ACF PRO-only). `app_setting` is a singleton CPT — create exactly ONE post here (e.g. titled \"App Settings\") and never a second one. A specific-Page-ID location rule was considered instead, but a dedicated CPT avoids depending on a page ID that doesn't exist until someone creates that page in this specific WordPress install."
   }
 ]

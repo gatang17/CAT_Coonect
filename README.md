@@ -26,7 +26,7 @@ Concretely, from the schema:
 
 | Catalog (admin-entered, backend, informational) | Captured (student-facing, front end) |
 |---|---|
-| `location`, `teacher`, `subject`, `subject_teacher`, `product`, `event`, `studio_gear`, `photographer` (role flag), `peer_tutor` (**approved** directory only), `equipment` (catalog fields — see note below) | `tutoring_booking`, `studio_booking`, `equipment_request`, `order`, `volunteer_request`, `photo_session_request`, `submit_work`, `board_post` (a hybrid case — see its own section below) |
+| `location`, `teacher`, `subject`, `subject_teacher`, `product`, `event`, `studio_gear`, `photographer` (role flag), `peer_tutor` (**approved** directory only), `equipment` (catalog fields — see note below), `app_setting` (a singleton — see the Tutoring section below) | `studio_booking`, `equipment_request`, `volunteer_request`, `photo_session_request`, `submit_work`, `board_post` (a hybrid case — see its own section below) |
 
 So when the spec says a teacher's name, their office, or a classroom shouldn't come from the front end — that's this split. Those are catalog rows an admin fills in ahead of time; the front end just displays them. A student never types a teacher's name into anything; they *select* a subject, then a specific teacher, from what's already there.
 
@@ -34,14 +34,14 @@ One nuance worth calling out explicitly: **not everything "front end" goes throu
 
 | Screen / action | Captured via | Notes |
 |---|---|---|
-| Tutoring booking | **MotoPress Appointment Booking** | Its own booking UI and storage — not a Forminator form. |
-| Studio booking | **Booking Calendar (wpdevelop)** | Same — its own booking UI and storage. |
+| Tutoring | *Nothing — no capture at all.* | Just a button that opens an external URL. See the Tutoring section below. |
+| Studio booking | **Booking Calendar (wpdevelop)** | Its own booking UI and storage — not a Forminator form. |
+| Goods | *Nothing — no capture at all.* | A pure calculator: quantity selectors + a running total, computed client-side. Nothing is submitted anywhere. See the Goods section below. |
 | Volunteer Form, Photo Form, Submit Work | **Forminator** | These are genuinely Forminator forms. |
-| Goods (order) | *Not yet assigned* — likely Forminator with a calculation add-on, since it's the same "itemized form" shape. Still an open decision. |
 | Borrow (equipment request/status) | **WP Inventory Manager** | Manages both the equipment catalog *and* live available/checked-out status itself. |
 | Board | **Forminator, with its Post Creation feature** | Different from the other Forminator forms — see the Board section below. |
 
-So "informational on the front end, not typed by a student" is the right mental model — just know that the actual capture mechanism is whichever plugin owns that screen (MotoPress, Booking Calendar, Forminator, or WP Inventory Manager), not Forminator across the board.
+So "informational on the front end, not typed by a student" is the right mental model — just know that the actual capture mechanism (where one exists at all) is whichever plugin owns that screen (Booking Calendar, Forminator, or WP Inventory Manager), not Forminator across the board. Two screens — Tutoring and Goods — capture nothing at all.
 
 ### A note on `equipment`
 
@@ -52,9 +52,9 @@ So "informational on the front end, not typed by a student" is the right mental 
 **Home** — Notifications (shown above events, intentionally), and an events/news list. Event cards offer "Volunteer" (→ Volunteer Form, event pre-selected) and "Participate" (→ Submit Work).
 
 **Resources** (tabs: Tutoring, Studio, Goods, Borrow, Photo Form)
-- *Tutoring* — student picks a subject, then picks a specific teacher (a subject can have several — see the Teachers section below) → the calendar shows only that teacher's real availability → picking a slot auto-fills the booking form. (MotoPress Appointment Booking.)
+- *Tutoring* — **not an in-app feature.** A single static link/button that opens an external URL (the program's existing "Request Tutoring" page, which already routes to the correct Microsoft Bookings link). No form, no calendar, no subject/teacher selection, no data model — see the Tutoring section under Setting This Up for the one field that makes the URL editable without touching code.
 - *Studio* — calendar + 4 fixed time slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00) + a gear checklist. The school email doubles as the contact — there's no separate contact field. Must also block times already occupied by regular scheduled classes, not just other studio bookings. (Booking Calendar.)
-- *Goods* — itemized order form for print materials and merch (see pricing table below).
+- *Goods* — a pure price calculator for print materials and merch: quantity selectors + a running total (see pricing table below). **Not a request or reservation system** — nothing gets submitted; a student just sees what their order would cost.
 - *Borrow* — real-time status of shared equipment (currently 10 iPads; may expand to laptops). Used inside a classroom, same-day return only, faculty-supervised — the app shows live status and captures the request; the physical handoff happens in person. (WP Inventory Manager.)
 - *Photo Form* — a student requests a photo session (as model, or as photographer). Requires a school email even when the subject is a guest, since the requesting student is the responsible party.
 
@@ -71,7 +71,7 @@ So "informational on the front end, not typed by a student" is the right mental 
 
 ### 1. Register the custom post types
 
-ACF (the free version used here) defines *fields*, not the post types those fields attach to. Eight catalog/hybrid post types need to exist before importing the JSON below:
+ACF (the free version used here) defines *fields*, not the post types those fields attach to. Nine catalog/hybrid post types need to exist before importing the JSON below:
 
 | Post type slug | Label | Supports | Notes |
 |---|---|---|---|
@@ -83,6 +83,7 @@ ACF (the free version used here) defines *fields*, not the post types those fiel
 | `photographer` | Photographers | Title | |
 | `peer_tutor` | Peer Tutors | Title | Public-facing directory — only *approved* tutors. |
 | `board_post` | Board Posts | Title, Editor, Thumbnail | See the Board section below — this one is created *by a form submission*, not by hand. |
+| `app_setting` | App Settings | Title | A singleton — see the Tutoring section below. Free-tier stand-in for an ACF Options Page (PRO-only). |
 
 You have two ways to register these without writing a plugin from scratch:
 
@@ -97,7 +98,7 @@ Once the post types above exist:
 
 1. `Custom Fields → Tools → Import Field Groups` in wp-admin.
 2. Upload `wordpress/acf-field-groups.json`.
-3. You'll see 8 field groups appear: Location, Teacher, Class/Subject, Product, Event, Photographer, Peer Tutor, Board Post.
+3. You'll see 9 field groups appear: Location, Teacher, Class/Subject, Product, Event, Photographer, Peer Tutor, Board Post, App Setting.
 
 ### 3. What to actually type into each one
 
@@ -127,9 +128,9 @@ Real faculty data to enter:
 
 Suggested grouping from the real faculty data above: Advertising Design → Ewing, Womack, Avila-Ugalde; Web Design → Cox, Fultz; Photography → Stewart, Moberly; Digital Video → Stansbury, Fitzer.
 
-> **Heads up:** this catalog is informational only — it feeds the "My Program" directory and lets other content (like a peer tutor's classroom) resolve correctly. It does **not** drive the actual booking calendar a student sees in Tutoring. In that flow, a student picks a subject and then a *specific* teacher (not automatic — subjects can have multiple teachers now) and books with them; that real availability is configured separately, inside the MotoPress Appointment Booking plugin's own Employee/Service setup. Keep the teacher and subject *names* consistent between the two so they don't look like different people/classes to a visitor, but they are two separate systems.
+> **Heads up:** this catalog is informational only — it feeds the "My Program" directory and lets other content (like a peer tutor's classroom) resolve correctly. It has nothing to do with Tutoring anymore, since that's now just a static external link (see below) with no subject/teacher selection of its own.
 
-**Products** — Post Title = the product's name (e.g. "Photo paper", "Pullover"). Three fields: *Size* (optional — leave blank for things like a pullover that have no size), *Price* (USD), *Category* (Print Material or Merch — don't add new category choices without updating `database/schema.sql` and the Goods form to match).
+**Products** — Post Title = the product's name (e.g. "Photo paper", "Pullover"). Three fields: *Size* (optional — leave blank for things like a pullover that have no size), *Price* (USD), *Category* (Print Material or Merch — don't add new category choices without updating `database/schema.sql` and the Goods calculator to match). This is the *only* thing the Goods tab needs from wp-admin — the calculator just reads this list and does arithmetic on the front end; there's nothing to submit or moderate.
 
 Current price list to enter:
 
@@ -166,6 +167,8 @@ A post existing here **is** the approval — there's no separate "status" toggle
 
 Approving a post is just **publishing it** — clicking Publish on the Draft the form created. There's no separate status field to flip; WordPress's own draft/publish state *is* the pending/approved state. Reject (or just leave as Draft) only for anything discriminatory or disrespectful — the bar is deliberately low otherwise.
 
+**App Settings** — This is where the Tutoring external link lives. Create **exactly one** post here (e.g. titled "App Settings") and never a second one — it's a stand-in for an ACF Options Page, which is normally the natural place for a single global value like this, but Options Pages are ACF PRO-only. A dedicated singleton post type gets the same result for free, without depending on a specific Page's ID (which doesn't exist yet at JSON-authoring time). One field: *Tutoring External URL* — the program's existing "Request Tutoring" page, which already routes to the correct Microsoft Bookings link. The Tutoring tab in the app is just a button that opens whatever URL is in this field.
+
 ### Why no custom taxonomies?
 
 Everything that looks like it could be a WordPress taxonomy (location type, product category, work type on Submit Work, session type on the Photo Form) is instead either a plain text field or an ACF Select field with a fixed set of choices. That mirrors how `database/schema.sql` models the same values — a free-text column or an `ENUM` — and it's simpler to maintain than real taxonomy terms for what are really just small, fixed lists. If a value needs to support hierarchy or WordPress-native archive/filter pages later, it can be promoted to a real taxonomy then.
@@ -178,7 +181,7 @@ Everything that looks like it could be a WordPress taxonomy (location type, prod
 
 ## Database schema
 
-See `database/schema.sql` for the full relational model — every table, column, and foreign key, with comments explaining the reasoning behind each design decision (e.g. why `photographer` and `peer_tutor` are modeled as subtypes of `student` rather than independent entities, why the classroom lives on `subject` rather than `teacher`, why `tutoring_booking` uses a composite foreign key against `subject_teacher` so a booking can't reference a teacher who doesn't actually teach that subject). It's been validated by actually running it against a live MariaDB instance — every table, foreign key, and constraint (including the `@kctcs.edu` domain check) behaves as designed — but again, it's a reference model, not something WordPress executes directly.
+See `database/schema.sql` for the full relational model — every table, column, and foreign key, with comments explaining the reasoning behind each design decision (e.g. why `photographer` and `peer_tutor` are modeled as subtypes of `student` rather than independent entities, why the classroom lives on `subject` rather than `teacher`, why Tutoring and the Goods request flow have no tables at all anymore). It's been validated by actually running it against a live MariaDB instance — every table, foreign key, and constraint (including the `@kctcs.edu` domain check) behaves as designed — but again, it's a reference model, not something WordPress executes directly.
 
 ## Tools decided so far
 
@@ -189,9 +192,10 @@ See `database/schema.sql` for the full relational model — every table, column,
 | Volunteer form, Photo form, Submit Work | Forminator |
 | Board | Forminator, using its Post Creation feature to write into the `board_post` CPT |
 | Studio booking | Booking Calendar (wpdevelop) |
-| Tutoring booking | MotoPress Appointment Booking |
+| Tutoring | No plugin — a static external link (Microsoft Bookings, via the program's existing "Request Tutoring" page), stored in one ACF field on a singleton `app_setting` post |
+| Goods | No plugin — a pure calculator reading the `product` catalog; nothing is captured |
 | Borrow (equipment lending) | WP Inventory Manager |
-| Catalog data (locations, teachers, classes, products, events, photographer role, approved peer tutors) | Custom post types + ACF (this repo's `wordpress/acf-field-groups.json`) |
+| Catalog data (locations, teachers, classes, products, events, photographer role, approved peer tutors, app settings) | Custom post types + ACF (this repo's `wordpress/acf-field-groups.json`) |
 | Registering the custom post types above | Custom Post Type UI (no-code) *or* a short `register_post_type()` snippet — not finalized, see setup section above |
 
 ## Pending decisions
@@ -199,7 +203,6 @@ See `database/schema.sql` for the full relational model — every table, column,
 - Which WordPress-to-app plugin for push notifications (AppPresser / MobiLoud / AppMySite).
 - Exact large-board size and its dry-mount-tissue pricing.
 - Whether an envelope is required for every submission type.
-- Which plugin captures the Goods (order) form — likely Forminator with a calculation add-on, not yet confirmed.
 - How a student becomes a "photographer" — no review/approval step has been described for this role, unlike peer tutoring.
 - Custom Post Type UI vs. a code snippet for registering the catalog post types.
 - Whether `board_post.image_url` should be a native ACF Image upload (what's currently modeled) or, to stay consistent with Submit Work's "paste a link, no upload" pattern, a pasted image URL instead.
