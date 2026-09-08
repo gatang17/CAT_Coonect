@@ -131,6 +131,42 @@ The page skeleton is built from **core Gutenberg blocks only** — Groups, Headi
 
 3. **Block Styles** so nobody has to type those class names: select a Group in the editor → Styles → *CATP Card* or *CATP Section header*; a Paragraph → *CATP Eyebrow label* or *CATP Note*.
 
+### Where to actually change the styling
+
+The stylesheet lives **inside the plugin** — `wp-content/plugins/catp-connect/assets/catp-app.css` — which the Customizer can't reach. Don't go looking for it under Appearance → Customize → Additional CSS; that's empty by default.
+
+For day-to-day design work, **don't edit the plugin file**. Paste this into **Appearance → Customize → Additional CSS** instead. The Customizer loads *after* the plugin, so these values win, and they survive plugin updates:
+
+```css
+/* ===== CATP Connect — design tokens =====
+   Change these and the whole app follows. */
+:root {
+  --catp-ink:        #111111;   /* main text */
+  --catp-ink-soft:   #555555;   /* secondary text */
+  --catp-ink-mute:   #8a8a8a;   /* small labels, notes */
+  --catp-paper:      #ffffff;   /* background */
+  --catp-line:       #bdbdbd;   /* the color of every border */
+  --catp-accent:     #111111;   /* brand color — not chosen yet */
+
+  --catp-border:     1px;       /* border thickness */
+  --catp-radius:     2px;       /* corner radius of cards and buttons */
+  --catp-gap:        12px;      /* space between cards */
+  --catp-pad:        20px;      /* padding inside cards */
+  --catp-maxw:       720px;     /* content column width */
+}
+```
+
+Quick sanity check: set `--catp-line` to red, save, and every border in the app turns red at once.
+
+| What you want to change | Where |
+|---|---|
+| Colors, border thickness, radius, spacing | Additional CSS — the token block above |
+| **Global typography and palette** (h1–h6, body text) | Blocksy's Customizer → Typography / Colors — no CSS needed |
+| One component (card, eyebrow, section header, button) | Additional CSS, targeting the class: `.catp-card { … }`, `.catp-eyebrow { … }`, `.catp-section { … }` |
+| The base file itself, permanently and versioned | `assets/catp-app.css` in the repo, then re-upload the plugin zip |
+
+Use Additional CSS while the design is being explored; move settled decisions into the repo file so they're versioned and survive a fresh install.
+
 Two notes for whoever designs on top of this:
 
 - **Blocksy's Customizer already handles global typography and colors** (Customizer → Typography / Colors). Use it for fonts and the palette; leave this stylesheet for the pieces Blocksy doesn't know about (cards, eyebrows, section headers).
