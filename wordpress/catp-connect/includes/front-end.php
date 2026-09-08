@@ -1,9 +1,11 @@
 <?php
 /**
- * Front-end glue. Deliberately small: it loads the base stylesheet, marks
- * the app pages with a body class, and registers the reusable Block Styles
- * so editors can apply them from the sidebar instead of typing classes.
- * It renders NO markup of its own — everything visible lives in the pages.
+ * Front-end glue. Deliberately small: it marks the app pages with a body
+ * class and registers the reusable Block Styles so editors can apply them
+ * from the sidebar instead of typing class names. It renders NO markup and
+ * loads NO stylesheet — the styling lives in wordpress/catp-app.css, which
+ * is pasted into Appearance → Customize → Additional CSS, so designers own
+ * it without touching plugin files.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -23,17 +25,6 @@ function catp_connect_body_class( $classes ) {
 		$classes[] = 'catp-app';
 	}
 	return $classes;
-}
-
-/** Base stylesheet — on the front end and inside the block editor. */
-add_action( 'enqueue_block_assets', 'catp_connect_enqueue_styles' );
-function catp_connect_enqueue_styles() {
-	wp_enqueue_style(
-		'catp-app',
-		plugins_url( 'assets/catp-app.css', CATP_CONNECT_FILE ),
-		array(),
-		CATP_CONNECT_VERSION
-	);
 }
 
 /** Block Styles: one click in the editor sidebar instead of a class name. */
