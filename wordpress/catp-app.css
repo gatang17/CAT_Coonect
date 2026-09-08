@@ -1,22 +1,35 @@
 /* ==========================================================================
-   CATP Connect — base styles (wireframe)
+   CATP Connect — app styles
    --------------------------------------------------------------------------
-   Loaded by the catp-connect plugin on the front end AND inside the block
-   editor, so pages look the same in both.
+   HOW TO USE THIS FILE
 
-   This file is deliberately a WIREFRAME: neutral borders, no fills, no
-   brand colors. It gives every page the same text roles and the same
-   structure so nobody has to set margins/padding page by page. The visual
-   design (colors, fonts, spacing personality) is meant to be done on top of
-   it — either by editing the variables below, or in Blocksy's Customizer
-   (Typography / Colors), or in Customizer → Additional CSS.
+   Copy everything below and paste it into:
+       Appearance → Customize → Additional CSS   (then Publish)
 
-   How to use it:
-     - Everything under `.catp-app` styles plain headings/paragraphs/buttons
-       inside the app pages — no class needed.
-     - The `catp-*` classes are the reusable pieces. In the editor they are
-       also available as Block Styles (Group → "CATP Card", etc.), so you
-       don't have to type class names.
+   That's it — no files to edit, nothing to upload, and it survives plugin
+   updates. Keep this copy in the repo as the master version: when the design
+   settles, paste the final CSS back in here so it isn't lost if the site is
+   ever rebuilt.
+
+   Two things worth knowing:
+   - Additional CSS only affects the FRONT END. Blocks will look plain while
+     you're editing them; preview or view the page to see the real styling.
+   - The CATP Connect plugin ships no CSS at all. It only registers the
+     classes as Block Styles (Group → "CATP Card" / "CATP Section header",
+     Paragraph → "CATP Eyebrow label" / "CATP Note") so you can apply them
+     from the editor sidebar without typing class names. Both the plain
+     class (.catp-card) and the Block Style class (.is-style-catp-card) are
+     handled below, so either way works.
+
+   WHAT THIS IS
+
+   A wireframe: neutral grey borders, no brand colors, one consistent set of
+   text roles. It exists so nobody has to set margins and padding page by
+   page. The visual design goes on top — start with the tokens in section 1.
+
+   Blocksy's own Customizer (Typography / Colors) handles global fonts and
+   the site palette; use it for those and leave this file for the pieces
+   Blocksy doesn't know about (cards, eyebrow labels, section headers).
    ========================================================================== */
 
 /* 1. TOKENS — change these first --------------------------------------- */

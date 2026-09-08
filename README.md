@@ -14,7 +14,7 @@ This README is the map of the whole project: what the app looks like, how its da
 |---|---|---|
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
 | `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the four app pages with one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
-| `wordpress/catp-connect/assets/catp-app.css` | The base stylesheet: design tokens (colors, fonts, borders) at the top, then text roles and layout components. Deliberately a **wireframe** — neutral borders, no brand colors — so the visual design can be done on top without unpicking anything. Loaded on the front end and inside the block editor. | **Whoever does the visual design.** Change the variables at the top and the whole app follows; no need to set margins or padding page by page. Can also be pasted into Customizer → Additional CSS if editing files is inconvenient. |
+| `wordpress/catp-app.css` | The app's stylesheet — design tokens (colors, borders, spacing) at the top, then text roles and layout components. Deliberately a **wireframe**: neutral borders, no brand colors. **The plugin does not load it.** Paste it into Appearance → Customize → Additional CSS. | **Whoever does the visual design.** Everything lives in the Customizer, so no files to edit and nothing breaks on a plugin update. Keep this repo copy as the master: paste settled changes back in here. |
 | `wordpress/catp-connect/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. The plugin loads this file automatically; it is also importable by hand via Custom Fields → Tools. | **The person filling in content** reads it (via the ACF screens it produces) to know exactly which fields to fill for each catalog item. **Whoever maintains the site** edits it here, in the repo, not in the ACF UI. |
 
 Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
@@ -112,9 +112,9 @@ One thing to check on the real site before building around it: `subject_teachers
 
 ### 4. How the styling is organised
 
-The page skeleton is built from **core Gutenberg blocks only** — Groups, Headings, Paragraphs, Query Loops. Nothing is rendered from PHP, so every part of every page can be moved, restyled or deleted in the editor. The plugin contributes exactly three things and no markup:
+The page skeleton is built from **core Gutenberg blocks only** — Groups, Headings, Paragraphs, Query Loops. Nothing is rendered from PHP, so every part of every page can be moved, restyled or deleted in the editor. The styling is split cleanly from the plugin:
 
-1. **`assets/catp-app.css`** — the base layer. At the top are the design tokens:
+1. **`wordpress/catp-app.css`** — the whole visual layer, pasted into Appearance → Customize → Additional CSS. **The plugin ships no CSS at all**, so the design is entirely in the Customizer, editable by anyone with admin access and safe from plugin updates. At the top are the design tokens:
 
    ```css
    --catp-ink / --catp-ink-soft / --catp-ink-mute   /* text */
@@ -129,13 +129,15 @@ The page skeleton is built from **core Gutenberg blocks only** — Groups, Headi
 
 2. **Reusable components**, applied by class: `catp-section` (eyebrow + title + optional "See all"), `catp-card` (bordered row with an arrow), `catp-card--event` + `catp-badge` (big date on the left), `catp-eyebrow` (small mono label), `catp-note` (setup hint), `catp-list` (a Query Loop), `catp-page` (the centered column).
 
-3. **Block Styles** so nobody has to type those class names: select a Group in the editor → Styles → *CATP Card* or *CATP Section header*; a Paragraph → *CATP Eyebrow label* or *CATP Note*.
+3. **Block Styles** so nobody has to type those class names: select a Group in the editor → Styles → *CATP Card* or *CATP Section header*; a Paragraph → *CATP Eyebrow label* or *CATP Note*. This is the plugin's only contribution to styling — it registers the names, the CSS gives them meaning.
+
+**One consequence of keeping the CSS in the Customizer:** Additional CSS applies to the front end only, so blocks look plain while you're editing them. Preview the page to see the real styling. (If that ever becomes annoying, the same file can go back into the plugin, which loads it in both places.)
 
 ### Where to actually change the styling
 
-The stylesheet lives **inside the plugin** — `wp-content/plugins/catp-connect/assets/catp-app.css` — which the Customizer can't reach. Don't go looking for it under Appearance → Customize → Additional CSS; that's empty by default.
+All of it lives in **Appearance → Customize → Additional CSS**. On a fresh site that box is empty: paste the contents of `wordpress/catp-app.css` from this repo into it once, and Publish. After that, all design work happens right there — no files, no uploads, nothing lost when the plugin updates.
 
-For day-to-day design work, **don't edit the plugin file**. Paste this into **Appearance → Customize → Additional CSS** instead. The Customizer loads *after* the plugin, so these values win, and they survive plugin updates:
+The tokens at the top are the first thing to reach for:
 
 ```css
 /* ===== CATP Connect — design tokens =====
@@ -163,9 +165,9 @@ Quick sanity check: set `--catp-line` to red, save, and every border in the app 
 | Colors, border thickness, radius, spacing | Additional CSS — the token block above |
 | **Global typography and palette** (h1–h6, body text) | Blocksy's Customizer → Typography / Colors — no CSS needed |
 | One component (card, eyebrow, section header, button) | Additional CSS, targeting the class: `.catp-card { … }`, `.catp-eyebrow { … }`, `.catp-section { … }` |
-| The base file itself, permanently and versioned | `assets/catp-app.css` in the repo, then re-upload the plugin zip |
+| Keeping it for the long term | Paste the final CSS back into `wordpress/catp-app.css` in the repo, so a rebuilt site can restore it |
 
-Use Additional CSS while the design is being explored; move settled decisions into the repo file so they're versioned and survive a fresh install.
+Additional CSS is the working copy; the repo file is the backup. Keep them in sync when the design settles.
 
 Two notes for whoever designs on top of this:
 
