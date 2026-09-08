@@ -24,7 +24,7 @@ Last updated: September 2026 (after the starter catalog and page skeleton were l
 | Meta Field Block installed | The app-conversion / push-notifications plugin (undecided) |
 | Blocksy theme active | Classrooms/studios, the Classroom of each subject, the Tutoring URL, Large board size/price — nobody had these yet |
 | **Starter catalog loaded**: 6 offices, 11 teachers, 4 subjects, 6 products | Converting the page sections into Stackable tabs, adding the Meta Field Blocks, building the forms |
-| **Page skeleton created**: Home / Resources / Get Involved / More, Home is the front page, "App Navigation" menu exists | |
+| **Page skeleton created**: Home / Resources / Get Involved / Help / More, each with a page header and the fixed navigation; Home is the front page, "App Navigation" menu exists | |
 
 So the data layer and the page structure exist; what's left is content that wasn't known yet, and the front-end build.
 
@@ -41,7 +41,7 @@ So the data layer and the page structure exist; what's left is content that wasn
    - Confirm the **Large board** size and price (seeded as placeholders: 15x20, $3.00).
    - Create **one** App Settings post (title "App Settings") and paste the **Tutoring External URL** — the program's existing "Request Tutoring" page. Never create a second App Settings post.
 7. **Paste the stylesheet.** Copy all of `wordpress/catp-app.css` into **Appearance → Customize → Additional CSS**. Nothing is styled until you do — the plugin loads no CSS. The look is a wireframe on purpose (neutral borders, no brand colors); design on top of it by editing the tokens at the top of that file, plus Blocksy's Customizer for global typography and palette. Whatever you change on the site, paste back into the repo copy so the two don't drift. See README → "How the styling is organised".
-8. **Build the navigation shell.** Make a Group with five links (Home · Resources · Get Involved · Help · More), give it the class `catp-appnav` under Block → Advanced → *Additional CSS class(es)*, and save it as a **synced pattern**. Drop that pattern on all four pages. The stylesheet makes it a fixed rail on the left on desktop and a fixed bottom bar on phones — one markup, one media query. Add a `catp-page-header` Group at the top of each page (wordmark, title, one-line subtitle, icon).
+8. **Check the navigation shell.** "Create page skeleton" already builds it: a synced pattern called **App Shell Nav** (Appearance → Patterns) holding the five links with their icons, placed on every page. The stylesheet makes it a fixed rail on the left at ≥900px and a fixed bar along the bottom below that — one markup, one media query. Edit the pattern once and all pages follow. Each page also gets a `catp-page-header` (wordmark, title, one-line subtitle).
 
 9. **Turn the page sections into tabs.** This is what keeps the app from being one long scroll. Each page has a "Setup note" at the top and one Group block per tab. Add a **Stackable → Tabs** block, give it the class `catp-tabs`, move each Group into its tab, delete the setup note. For a second level inside a tab, nest another Tabs block with `catp-tabs catp-tabs--sub`. Where a note says "add a Meta Field Block for `some_field`", add that block inside the post list and pick that ACF field.
 10. **Build the forms** in the tabs whose notes name them (details in README → App structure):
@@ -65,7 +65,7 @@ These come from the program's requirements, not from taste:
 
 - **A field** (add/rename/reorder): edit `wordpress/catp-connect/acf-field-groups.json` (it's ACF's own export format), re-zip, re-upload with "Replace current with uploaded". The groups are read-only in the ACF admin on purpose — the repo is the source of truth.
 - **A post type**: edit `catp_connect_post_types()` in `wordpress/catp-connect/catp-connect.php`.
-- **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`. Re-running "Create page skeleton" with the **Overwrite** checkbox replaces the four pages' content with a fresh skeleton — handy right after a plugin update, destructive once someone has designed those pages, so leave it unchecked by default.
+- **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`. Re-running "Create page skeleton" with the **Overwrite** checkbox replaces the five pages' content with a fresh skeleton — handy right after a plugin update, destructive once someone has designed those pages, so leave it unchecked by default.
 - **The look**: `wordpress/catp-app.css` (tokens at the top), then re-paste it into Customizer → Additional CSS.
 - **The data model itself**: update `database/schema.sql` too, so the reference stays honest.
 - Commit to the repo. Don't let the live site drift from what's in git.

@@ -11,7 +11,8 @@
  *  2. Create page skeleton  — creates the four app pages (Home, Resources,
  *     Get Involved, More) with one section per tab, built from core
  *     blocks only, ready to be converted into Stackable Tabs. Sets Home
- *     as the front page and builds an "App Navigation" menu.
+ *     as the front page, builds an "App Navigation" menu, and stores the
+ *     fixed navigation as the "App Shell Nav" synced pattern.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -94,7 +95,7 @@ function catp_connect_setup_page() {
 
 		<hr>
 		<h2>2. Create page skeleton</h2>
-		<p>Creates the four app pages — <strong>Home, Resources, Get Involved, More</strong> — with one section per tab (headings, placeholder notes, and the parts that already work: the Tutoring button, and post lists for the directory, events, products and the board). Built from core blocks only; each section is a Group ready to become a Stackable Tab. Also sets Home as the front page and creates an "App Navigation" menu.</p>
+		<p>Creates the five app pages — <strong>Home, Resources, Get Involved, Help, More</strong> — each with a page header, one section per tab (headings, placeholder notes, and the parts that already work: the Tutoring button, and post lists for the directory, events, products and the board) and the fixed navigation. Built from core blocks only; each section is a Group ready to become a Stackable Tab. Also creates the <strong>App Shell Nav</strong> synced pattern, sets Home as the front page and creates an "App Navigation" menu.</p>
 		<form method="post">
 			<?php wp_nonce_field( 'catp_connect_setup', 'catp_nonce' ); ?>
 			<input type="hidden" name="catp_action" value="create_pages">
@@ -293,8 +294,9 @@ function catp_connect_seed_catalog() {
 
 /* -------------------------------------------------------------------------
  * 2. Page skeleton — core blocks only, editable like any other page.
- *    The catp-* classes are hooks for assets/catp-app.css (and the matching
- *    Block Styles); they impose structure, not design.
+ *    The catp-* classes are hooks for wordpress/catp-app.css (pasted into
+ *    Customizer -> Additional CSS) and the matching Block Styles; they impose
+ *    structure, not design.
  * ---------------------------------------------------------------------- */
 
 function catp_connect_b_heading( $text, $level = 2 ) {
@@ -374,16 +376,86 @@ function catp_connect_b_buttons( $buttons ) {
 	}
 	return $out . '</div><!-- /wp:buttons -->';
 }
-function catp_connect_b_tabs_intro( $tabs ) {
-	return catp_connect_b_note(
-		'<strong>Setup note (delete once done):</strong> each Group below is one tab: ' . esc_html( implode( ' · ', $tabs ) ) .
-		'. To turn them into real tabs, add a <strong>Stackable → Tabs</strong> block with these tab labels and move each Group into its tab. ' .
-		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field. ' .
-		'Every Group and paragraph here has a CATP Block Style (sidebar → Styles) — the look comes from assets/catp-app.css in the plugin.'
+/**
+ * The navigation shell, as one Custom HTML block.
+ *
+ * Five links with inline Lucide icons. `catp-appnav` is what the stylesheet
+ * keys off: a fixed rail on the left at >=900px, a fixed bottom bar below
+ * that. HTML rather than a Group of links so the icons survive; editors can
+ * still change labels and hrefs in the block.
+ */
+function catp_connect_nav_html() {
+	$icons = array(
+		'home'         => '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+		'resources'    => '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>',
+		'get-involved' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
+		'help'         => '<path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>',
+		'more'         => '<path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/>',
+	);
+	$items = array(
+		array( 'home', 'Home', '/' ),
+		array( 'resources', 'Resources', '/resources/' ),
+		array( 'get-involved', 'Get Involved', '/get-involved/' ),
+		array( 'help', 'Help', '/help/' ),
+		array( 'more', 'More', '/more/' ),
+	);
+	$links = '<p class="catp-brand">CATP<span>+</span></p>';
+	foreach ( $items as $item ) {
+		list( $key, $label, $href ) = $item;
+		$links .= sprintf(
+			'<a href="%s"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%s</svg><span>%s</span></a>',
+			esc_url( $href ),
+			$icons[ $key ],
+			esc_html( $label )
+		);
+	}
+	return '<nav class="catp-appnav" aria-label="App navigation">' . $links . '</nav>';
+}
+
+/**
+ * Store that nav once as a synced pattern (a `wp_block` post) so all four
+ * pages share one copy: edit it in Appearance -> Patterns and every page
+ * follows. Returns [id, created].
+ */
+function catp_connect_ensure_nav_pattern() {
+	return catp_connect_ensure_post(
+		'wp_block',
+		'App Shell Nav',
+		array( 'post_content' => '<!-- wp:html -->' . catp_connect_nav_html() . '<!-- /wp:html -->' )
 	);
 }
 
-function catp_connect_page_skeleton() {
+/** A reference to that synced pattern — what actually goes on each page. */
+function catp_connect_b_nav_ref( $ref ) {
+	return $ref ? sprintf( '<!-- wp:block {"ref":%d} /-->', (int) $ref ) : '';
+}
+
+/**
+ * Page header: the wordmark, the title with a one-line subtitle, and an icon
+ * on the right. Matches `.catp-page-header` in the stylesheet.
+ */
+function catp_connect_b_page_header( $title, $subtitle ) {
+	return catp_connect_b_group(
+		'catp-page-header',
+		catp_connect_b_para( 'CATP<span>+</span>', 'catp-brand' )
+		. catp_connect_b_group(
+			'catp-page-header-copy',
+			catp_connect_b_heading( $title, 1 ) . catp_connect_b_para( esc_html( $subtitle ) )
+		)
+	);
+}
+
+function catp_connect_b_tabs_intro( $tabs ) {
+	return catp_connect_b_note(
+		'<strong>Setup note (delete once done):</strong> each Group below is one tab: ' . esc_html( implode( ' · ', $tabs ) ) .
+		'. To turn them into real tabs, add a <strong>Stackable → Tabs</strong> block with these tab labels, give that block the class <code>catp-tabs</code> (Block → Advanced → Additional CSS class(es)), and move each Group into its tab. ' .
+		'For a second level inside a tab, nest another Tabs block with <code>catp-tabs catp-tabs--sub</code>. ' .
+		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field. ' .
+		'The look comes from <code>catp-app.css</code>, pasted into Customizer → Additional CSS — the plugin ships no styles.'
+	);
+}
+
+function catp_connect_page_skeleton( $nav_ref = 0 ) {
 	$title       = '<!-- wp:post-title {"level":3,"isLink":true} /-->';
 	$post_date   = '<!-- wp:post-date {"format":"F j, Y","className":"catp-eyebrow"} /-->';
 	$badge       = catp_connect_b_group( 'catp-badge', '<!-- wp:post-date {"format":"M","className":"catp-badge-month"} /--><!-- wp:post-date {"format":"d","className":"catp-badge-day"} /-->' );
@@ -407,7 +479,7 @@ function catp_connect_page_skeleton() {
 		) )
 		. catp_connect_b_note( 'Button labels are plain text — rename "Drop Zone" once the Board naming is decided.' );
 
-	$resources = catp_connect_b_heading( 'Resources', 1 )
+	$resources = catp_connect_b_page_header( 'Resources', 'Make space for the work.' )
 		. catp_connect_b_tabs_intro( array( 'Tutoring', 'Studio', 'Goods', 'Borrow', 'Photo Form' ) )
 		. catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab — the app captures nothing for tutoring.' ) )
 		. catp_connect_b_tab( 'studio', 'Studio', catp_connect_b_note( 'Booking Calendar goes here: 4 fixed slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00), a gear checklist, and the school email as contact. Must also block times taken by regular classes.' ) )
@@ -415,13 +487,13 @@ function catp_connect_page_skeleton() {
 		. catp_connect_b_tab( 'borrow', 'Borrow', catp_connect_b_note( 'WP Inventory Manager goes here: live available / checked-out status of the shared iPads, and the request form. Same-day, in-classroom use only.' ) )
 		. catp_connect_b_tab( 'photo-form', 'Photo Form', catp_connect_b_note( 'Forminator form goes here: school email (@kctcs.edu, required even for a guest), session type (model / photographer), desired date, guest name.' ) );
 
-	$get_involved = catp_connect_b_heading( 'Get Involved', 1 )
+	$get_involved = catp_connect_b_page_header( 'Get Involved', 'Put your skills into motion.' )
 		. catp_connect_b_tabs_intro( array( 'Volunteer Form', 'Submit Work', 'Board' ) )
 		. catp_connect_b_tab( 'volunteer-form', 'Volunteer Form', catp_connect_b_note( 'Forminator form goes here: school email, request date, event (dropdown), and the "Become a Peer Tutor" request (subject + availability). Say clearly that volunteer hours count toward practicum hours.' ) )
 		. catp_connect_b_tab( 'submit-work', 'Submit Work', catp_connect_b_note( 'Forminator form goes here: name, work type (Ad / Photo / Web), OneDrive folder link (no upload), optional event. Show the file-naming instructions next to the form.' ) )
 		. catp_connect_b_tab( 'board', 'Board', catp_connect_b_query( 'board_post', 13, catp_connect_b_card( '<!-- wp:post-featured-image /-->' . $title ), 'date', 'desc' ) . catp_connect_b_note( 'Image-gallery grid. Add a Meta Field Block for <code>board_post_image</code> (or use the featured image) and one for <code>board_post_display_name</code> with "Anonymous" as the fallback. Never show <code>board_post_email</code>. The submission form (Forminator, Post Creation → Board Posts, as Draft) goes above the grid.' ) );
 
-	$more = catp_connect_b_heading( 'More', 1 )
+	$more = catp_connect_b_page_header( 'More', 'Find your people. Keep growing.' )
 		. catp_connect_b_tabs_intro( array( 'My Program', 'Preparation' ) )
 		. catp_connect_b_tab( 'my-program', 'My Program',
 			catp_connect_b_heading( 'Classes', 3 ) . catp_connect_b_query( 'subject', 14, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>subject_teachers</code> and <code>subject_location</code> inside each card.' )
@@ -430,11 +502,21 @@ function catp_connect_page_skeleton() {
 		)
 		. catp_connect_b_tab( 'preparation', 'Preparation', catp_connect_b_note( 'Portfolio-readiness progress bar + NOCTI exam-prep module (game-style, with a streak counter). Not designed yet.' ) );
 
+	$help = catp_connect_b_page_header( 'Help', 'Quick answers for your next step.' )
+		. catp_connect_b_group( 'catp-chat', catp_connect_b_para( 'Hi — I can help you find CATP answers. Choose a question or type your own.', 'catp-bubble' ) )
+		. catp_connect_b_section( 'Suggested questions', 'Start here' )
+		. catp_connect_b_note( 'The FAQ list goes here: one link per question, wrapped in a Group with the class <code>catp-faq</code>. Point each at the tab that answers it (Resources → Studio, Get Involved → Submit Work, and so on). A real chat widget is a later decision — until then this page is a linked FAQ, which needs no plugin.' );
+
+	// The nav sits outside the centered column: it is fixed to the viewport,
+	// so the column's max-width must not apply to it.
+	$nav = catp_connect_b_nav_ref( $nav_ref );
+
 	return array(
-		'home'         => array( 'title' => 'Home', 'content' => catp_connect_b_group( 'catp-page', $home ) ),
-		'resources'    => array( 'title' => 'Resources', 'content' => catp_connect_b_group( 'catp-page', $resources ) ),
-		'get-involved' => array( 'title' => 'Get Involved', 'content' => catp_connect_b_group( 'catp-page', $get_involved ) ),
-		'more'         => array( 'title' => 'More', 'content' => catp_connect_b_group( 'catp-page', $more ) ),
+		'home'         => array( 'title' => 'Home', 'content' => catp_connect_b_group( 'catp-page', $home ) . $nav ),
+		'resources'    => array( 'title' => 'Resources', 'content' => catp_connect_b_group( 'catp-page', $resources ) . $nav ),
+		'get-involved' => array( 'title' => 'Get Involved', 'content' => catp_connect_b_group( 'catp-page', $get_involved ) . $nav ),
+		'more'         => array( 'title' => 'More', 'content' => catp_connect_b_group( 'catp-page', $more ) . $nav ),
+		'help'         => array( 'title' => 'Help', 'content' => catp_connect_b_group( 'catp-page', $help ) . $nav ),
 	);
 }
 
@@ -446,8 +528,15 @@ function catp_connect_create_page_skeleton( $overwrite = false ) {
 		'errors'  => array(),
 		'next'    => array(),
 	);
+	list( $nav_ref, $nav_created ) = catp_connect_ensure_nav_pattern();
+	if ( $nav_created ) {
+		$log['created'][] = 'Synced pattern: App Shell Nav (the fixed navigation, shared by all four pages)';
+	} elseif ( $nav_ref ) {
+		$log['skipped'][] = 'Synced pattern: App Shell Nav';
+	}
+
 	$ids = array();
-	foreach ( catp_connect_page_skeleton() as $slug => $page ) {
+	foreach ( catp_connect_page_skeleton( $nav_ref ) as $slug => $page ) {
 		$existing = get_page_by_path( $slug, OBJECT, 'page' );
 		if ( $existing ) {
 			$ids[ $slug ] = (int) $existing->ID;
@@ -492,7 +581,7 @@ function catp_connect_create_page_skeleton( $overwrite = false ) {
 	if ( ! $menu ) {
 		$menu_id = wp_create_nav_menu( $menu_name );
 		if ( ! is_wp_error( $menu_id ) ) {
-			foreach ( array( 'home', 'resources', 'get-involved', 'more' ) as $slug ) {
+			foreach ( array( 'home', 'resources', 'get-involved', 'help', 'more' ) as $slug ) {
 				if ( empty( $ids[ $slug ] ) ) {
 					continue;
 				}
@@ -507,7 +596,7 @@ function catp_connect_create_page_skeleton( $overwrite = false ) {
 					)
 				);
 			}
-			$log['created'][] = "Menu: $menu_name (Home, Resources, Get Involved, More)";
+			$log['created'][] = "Menu: $menu_name (Home, Resources, Get Involved, Help, More)";
 			$locations  = get_nav_menu_locations();
 			$registered = array_keys( get_registered_nav_menus() );
 			if ( $registered ) {
@@ -529,6 +618,7 @@ function catp_connect_create_page_skeleton( $overwrite = false ) {
 
 	$log['next'][] = 'Open each page and convert its Groups into a <strong>Stackable → Tabs</strong> block (the setup note at the top of each page says how), then delete the setup notes.';
 	$log['next'][] = 'Drop the Forminator / Booking Calendar / WP Inventory Manager blocks into the tabs whose notes name them.';
-	$log['next'][] = 'For a phone-style bottom bar: Customizer → Footer → add the App Navigation menu, give that footer row the class <code>catp-bottom-nav</code> (the plugin\'s stylesheet pins it to the bottom on phones).';
+	$log['next'][] = 'Paste <code>wordpress/catp-app.css</code> into <strong>Appearance → Customize → Additional CSS</strong> — nothing is styled until you do, because the plugin ships no CSS.';
+	$log['next'][] = 'The navigation is already on all four pages as the synced pattern <strong>App Shell Nav</strong> (Appearance → Patterns): a fixed rail on the left on desktop, a fixed bar along the bottom on phones. Edit it once and every page follows.';
 	return $log;
 }
