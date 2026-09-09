@@ -137,6 +137,11 @@
 .catp-app [class*="catp-"] > * {
   max-width: none !important;
   margin-inline: 0 !important;
+  /* Themes set `width: 100%` on content paragraphs. On a flex item that is
+     also its flex-basis, so one paragraph claims the whole row and its
+     siblings collapse to nothing. Not !important, so an inline width — the
+     progress bar's, say — still wins. */
+  width: auto;
 }
 /* the phone-width column stays centred, and uncapped by the theme */
 .catp-app .catp-page {
@@ -247,6 +252,14 @@
   gap: 16px;
   padding: 6px 0 33px;
 }
+/* The wordmark sizes to its text. Without this its flex-basis falls back to
+   the theme's `width: 100%` and it takes the whole header row. */
+.catp-app .catp-page-header > .catp-brand {
+  flex: 0 0 auto;
+  width: auto;
+  white-space: nowrap;
+}
+
 /* A floor, not a fix. Whatever squeezes this column — a theme rule, a
    wrapper this file has not seen — it must never get narrow enough to
    render "Resources" one letter per line down the page. It would rather
