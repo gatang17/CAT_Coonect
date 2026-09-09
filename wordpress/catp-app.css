@@ -88,12 +88,16 @@
 .catp-app button, .catp-app input, .catp-app select, .catp-app textarea { font: inherit; }
 .catp-app button:disabled { cursor: not-allowed; opacity: .45; }
 
-.catp-app h1, .catp-app h2, .catp-app h3 { font-family: var(--catp-font); margin-top: 0; }
-.catp-app h1 { margin: 5px 0 6px; font-size: clamp(28px, 6vw, 38px); font-weight: 800; line-height: 1.05; letter-spacing: -.055em; }
-.catp-app h2 { margin: 5px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.045em; }
-.catp-app h3 { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em; }
-.catp-app p  { font-size: 14px; line-height: 1.5; }
-.catp-app a  { color: inherit; }
+/* Plain elements inside app pages. Wrapped in :where() so they carry only
+   `.catp-app`'s specificity — otherwise `.catp-app p` (0,1,1) would outrank
+   every single-class component below it, and `.catp-eyebrow`, `.catp-note`,
+   `.catp-brand`, `.catp-bubble` and the rest would all render at 14px. */
+.catp-app :where(h1, h2, h3) { font-family: var(--catp-font); margin-top: 0; }
+.catp-app :where(h1) { margin: 5px 0 6px; font-size: clamp(28px, 6vw, 38px); font-weight: 800; line-height: 1.05; letter-spacing: -.055em; }
+.catp-app :where(h2) { margin: 5px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.045em; }
+.catp-app :where(h3) { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em; }
+.catp-app :where(p)  { font-size: 14px; line-height: 1.5; }
+.catp-app :where(a)  { color: inherit; }
 
 /* the centered column every page lives in */
 .catp-page { width: min(100%, var(--catp-maxw)); margin: 0 auto; padding: 28px 22px 26px; }

@@ -13,7 +13,7 @@ This README is the map of the whole project: what the app looks like, how its da
 | Path | What it is | Who uses it |
 |---|---|---|
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
-| `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the five app pages with a page header, the fixed navigation and one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
+| `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, renders the **Program Goods calculator** (`[catp_goods_calculator]` — the one thing that needs to compute), and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the five app pages with a page header, the fixed navigation and one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
 | `wordpress/catp-app.css` | The app stylesheet: design tokens (colors, fonts, borders) at the top, then text roles, the navigation shell, the tab styling and the app components. **Not loaded by the plugin** — paste it into Appearance → Customize → Additional CSS. Every rule is a reusable class you apply from the editor's *Additional CSS class(es)* field, so a page built later reuses the same vocabulary. | **Whoever does the visual design.** Change the variables at the top and the whole app follows — without ever opening a code file. Keep this repo copy in sync with what is pasted on the site. |
 | `wordpress/catp-connect/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. The plugin loads this file automatically; it is also importable by hand via Custom Fields → Tools. | **The person filling in content** reads it (via the ACF screens it produces) to know exactly which fields to fill for each catalog item. **Whoever maintains the site** edits it here, in the repo, not in the ACF UI. |
 
@@ -155,6 +155,21 @@ Two notes for whoever designs on top of this:
 **The navigation shell:** don't build it in code. Make a Group, put the five links in it (Home · Resources · Get Involved · Help · More), give the Group the class `catp-appnav`, and save it as a **synced pattern** so every page shares one copy. The stylesheet turns that same markup into a fixed rail down the left on screens ≥900px and a fixed bar along the bottom below that, and adds matching padding to `.catp-app` so nothing hides behind it. Icons are optional: paste inline SVG inside each link with a Custom HTML block. A WordPress menu (`ul > li > a`) is styled identically if you'd rather attach *App Navigation* to a theme location.
 
 **Tabs:** the markup and the click behaviour come from the **Stackable → Tabs** block — CSS alone cannot switch panels. Add `catp-tabs` to the Tabs block for a page's main tabs and `catp-tabs catp-tabs--sub` to a nested one for the second level. The stylesheet targets the ARIA roles (`[role="tab"]`, `[aria-selected]`) that any accessible tabs block emits rather than Stackable's internal class names, so a Stackable update — or swapping it for a different tabs block later — won't break the design.
+
+### 4b. The one piece of behaviour: the Goods calculator
+
+Everything else on these pages is markup a designer can move. The Program Goods tab is the exception — a price list cannot add itself up, and no free block plugin sums ACF values, so the plugin renders it.
+
+`[catp_goods_calculator]` lists every published **Product** with its `product_size` and `product_price`, gives each row a quantity stepper, and keeps a running total. `product_category` decides the order and the divider: print materials first, then a **MERCH** rule, then merch. Attributes: `currency` (default `$`), `note`, and `heading="no"` when the page already has its own title.
+
+It ships `assets/catp-goods.js` — about 90 lines, no dependencies, no build step, no network calls, loaded only on pages where the shortcode actually ran. The prices are already in the markup as `data-catp-price`, so the arithmetic never leaves the browser.
+
+**The classes it emits are the ones `catp-app.css` already styles** (`catp-kit-row`, `catp-qty`, `catp-kit-divider`, `catp-kit-total`). So this file renders structure, never appearance — a colour change is still a Customizer edit, never a code edit.
+
+To let students send their list, put a Forminator form under the shortcode:
+
+- give a hidden or textarea field the class `catp-goods-summary` — the calculator fills it with the chosen items and the total, so there is no second source of truth;
+- add `data-catp-requires-items` to the submit button to keep it disabled until something is picked.
 
 ### 5. What to actually type into each one
 

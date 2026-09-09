@@ -521,7 +521,11 @@ function catp_connect_page_skeleton( $nav_ref = 0 ) {
 		)
 		. catp_connect_b_tab( 'materials', 'Materials & Equipment',
 			catp_connect_b_note( 'Second level here: Program Goods · Borrow.' )
-			. catp_connect_b_tab( 'program-goods', 'Program Goods', catp_connect_b_para( 'Build your supply list, then request it for admin preparation.' ) . catp_connect_b_query( 'product', 12, $plain_card ) . catp_connect_b_note( 'This is the supply calculator. Each row needs Meta Field Blocks for <code>product_size</code>, <code>product_price</code> and <code>product_category</code>, plus a quantity stepper and a running total — give the rows <code>catp-kit-row</code>, the stepper <code>catp-qty</code> and the total <code>catp-kit-total</code>. <strong>The arithmetic needs JavaScript</strong>: no block plugin adds up ACF prices. See the note in README.' ) )
+			. catp_connect_b_tab( 'program-goods', 'Program Goods',
+				catp_connect_b_shortcode( '[catp_goods_calculator]' )
+				. catp_connect_b_note( 'The calculator is rendered by the plugin: it lists every published <strong>Product</strong> with its size and price, adds a quantity stepper to each row, and keeps a running total. Print materials first, Merch after the divider — that order comes from <code>product_category</code>. To change what it shows, edit the Products; to change how it looks, edit <code>catp-app.css</code>. Attributes: <code>currency</code>, <code>note</code>, <code>heading="no"</code>.' )
+				. catp_connect_b_note( 'To let students send the list: put a Forminator form under this shortcode, give one hidden or textarea field the class <code>catp-goods-summary</code>, and the calculator fills it with the chosen items and the total. Give the submit button the attribute <code>data-catp-requires-items</code> to keep it disabled until something is picked.' )
+			)
 			. catp_connect_b_tab( 'borrow', 'Borrow', catp_connect_b_note( 'WP Inventory Manager goes here: the 10 shared iPads with live available / checked-out status (<code>catp-status</code> badges) and the request form. Same-day, in-classroom use only, and a faculty member must check the iPad out.' ) )
 		);
 
