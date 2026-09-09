@@ -247,7 +247,14 @@
   gap: 16px;
   padding: 6px 0 33px;
 }
-.catp-page-header-copy { flex: 1; min-width: 0; }
+/* A floor, not a fix. Whatever squeezes this column — a theme rule, a
+   wrapper this file has not seen — it must never get narrow enough to
+   render "Resources" one letter per line down the page. It would rather
+   overflow sideways than build a tower. */
+.catp-app .catp-page-header-copy {
+  flex: 1 1 auto;
+  min-width: min(100%, 20ch);
+}
 .catp-page-header h1 { margin-top: 4px; font-size: 30px; }
 .catp-page-header p  { margin: 0; color: var(--catp-muted-foreground); font-size: 14px; line-height: 1.5; }
 .catp-header-icon {
