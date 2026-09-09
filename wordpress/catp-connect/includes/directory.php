@@ -189,7 +189,13 @@ function catp_connect_directory_shortcode( $atts ) {
 							<?php if ( $show_actions ) : ?>
 								<div class="catp-directory-actions" data-catp-panel hidden>
 									<p><?php echo esc_html( 'What would you like to do with ' . $person['name'] . '?' ); ?></p>
-									<a href="<?php echo esc_url( home_url( '/resources/' ) ); ?>"><?php echo esc_html( 'faculty' === $key ? 'Request tutoring' : 'Ask for a meeting' ); ?></a>
+									<?php
+									// The tab script gives every tab an id from its `catp-tab-<slug>`
+									// class, so this lands on Tutoring rather than the top of the
+									// page. Both groups go there: the prototype dropped its separate
+									// Advising tab, so a meeting is booked the same way.
+									?>
+									<a href="<?php echo esc_url( home_url( '/resources/#tutoring' ) ); ?>"><?php echo esc_html( 'faculty' === $key ? 'Request tutoring' : 'Ask for a meeting' ); ?></a>
 								</div>
 							<?php endif; ?>
 						</div>

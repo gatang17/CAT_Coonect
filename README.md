@@ -156,9 +156,9 @@ Two notes for whoever designs on top of this:
 
 **Tabs:** the markup and the click behaviour come from the **Stackable → Tabs** block — CSS alone cannot switch panels. Add `catp-tabs` to the Tabs block for a page's main tabs and `catp-tabs catp-tabs--sub` to a nested one for the second level. The stylesheet targets the ARIA roles (`[role="tab"]`, `[aria-selected]`) that any accessible tabs block emits rather than Stackable's internal class names, so a Stackable update — or swapping it for a different tabs block later — won't break the design.
 
-### 4b. The three pieces of behaviour
+### 4b. The behaviour the plugin renders
 
-Everything else on these pages is markup a designer can move. Three things are not — adding up a price list, filtering a list as you type, and revealing a field from a switch — so the plugin covers those, and only those.
+Everything on these pages is markup a designer can move — but some of it needs script to be usable: adding up a price list, filtering a list as you type, revealing a field from a switch, switching tabs, opening an image. The plugin covers those, and only those. None of it styles anything: every class it emits is one `catp-app.css` already owns.
 
 `[catp_goods_calculator]` lists every published **Product** with its `product_size` and `product_price`, gives each row a quantity stepper, and keeps a running total. `product_category` decides the order and the divider: print materials first, then a **MERCH** rule, then merch. Attributes: `currency` (default `$`), `note`, and `heading="no"` when the page already has its own title.
 
@@ -184,6 +184,18 @@ One honest limit: in the prototype, "Request tutoring" from a row opens Resource
 So: add a single checkbox field, give it the CSS class `catp-toggle` and its wrapper `catp-toggle-row`. The stylesheet turns it into the pill — a **real checkbox**, which means it submits with the form, works with the keyboard, and animates with no JavaScript at all. Then let Forminator's conditional logic reveal the dependent field.
 
 `assets/catp-forms.js` covers only what Forminator's logic cannot reach: a toggle outside a form, or one revealing a whole block rather than a sibling field. Mark the thing to show with `catp-reveal` (the next one after the toggle) or point at it with `data-catp-reveal="#id"`. When it hides a block it also clears the fields inside, so a value nobody can see is never submitted. It loads on the app pages rather than only where a toggle exists, because the toggle lives inside markup the plugin does not render — there is nothing to detect.
+
+**Tabs, without a tabs block.** The setup skeleton writes one Group per section, each starting with a heading, inside a wrapper carrying `catp-tabs`. `assets/catp-tabs.js` reads those headings and builds the tab strip at load time.
+
+That means: with no script the page is still complete — every section under its heading, in order, nothing hidden behind a control that never arrives. Renaming a tab is renaming a heading. Reordering is dragging a Group. Nobody maintains tab markup.
+
+A tab's `catp-tab-<slug>` class becomes its id, so **`/resources/#tutoring` opens that tab** — including a tab nested two levels down, whose parents open with it. That is how the directory's "Request tutoring" lands on the right tab.
+
+Arrow keys move between tabs, Home and End jump to the ends, and the roles are the ones `catp-app.css` styles. **Stackable is now optional**: put its Tabs block on the same wrapper and it takes over, and the design is identical either way — the stylesheet keys off the ARIA roles, not either one's markup.
+
+**The Drop Zone gallery.** `[catp_board]` renders the published Board Posts and a lightbox. This one is rendered in PHP for a reason beyond convenience: **`board_post_email` must never reach the front end**, and a Query Loop wired by hand makes that a rule someone has to remember. Here the field is simply never read, so it cannot leak by accident.
+
+A blank `board_post_display_name` shows as "Anonymous". Only published posts appear — a draft is a submission awaiting review, and publishing it is the approval. The lightbox is a real `<dialog>` opened with `showModal()`, so Escape, the backdrop, focus containment and returning focus to the tile are the browser's behaviour rather than something re-implemented here. Attributes: `limit`, `footnote`.
 
 ### 5. What to actually type into each one
 

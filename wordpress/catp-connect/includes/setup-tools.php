@@ -334,6 +334,22 @@ function catp_connect_b_section( $eyebrow, $title, $more_text = '', $more_href =
 	return catp_connect_b_group( 'catp-section', catp_connect_b_eyebrow( $eyebrow ) . catp_connect_b_group( 'catp-section-row', $row ) );
 }
 /** One tab-to-be. */
+/**
+ * Wrap sibling `catp-tab` Groups so the tab script picks them up.
+ *
+ * $variant is 'folder', 'segment', 'sub' or 'sub two'. With no script the
+ * wrapper is an ordinary Group and the sections read straight down the page.
+ */
+function catp_connect_b_tabs( $variant, $inner ) {
+	$classes = 'catp-tabs';
+	foreach ( preg_split( '/\s+/', trim( $variant ) ) as $part ) {
+		if ( '' !== $part ) {
+			$classes .= ' catp-tabs--' . $part;
+		}
+	}
+	return catp_connect_b_group( $classes, $inner );
+}
+
 function catp_connect_b_tab( $slug, $label, $inner ) {
 	return catp_connect_b_group( 'catp-tab catp-tab-' . $slug, catp_connect_b_heading( $label, 2 ) . $inner );
 }
@@ -447,11 +463,11 @@ function catp_connect_b_page_header( $title, $subtitle ) {
 
 function catp_connect_b_tabs_intro( $tabs ) {
 	return catp_connect_b_note(
-		'<strong>Setup note (delete once done):</strong> each Group below is one tab: ' . esc_html( implode( ' · ', $tabs ) ) .
-		'. To turn them into real tabs, add a <strong>Stackable → Tabs</strong> block with these tab labels, give that block the class <code>catp-tabs catp-tabs--sub</code> (Block → Advanced → Additional CSS class(es)), and move each Group into its tab. ' .
-		'Two labels only? add <code>catp-tabs--two</code> as well. A first level that switches whole modes of a page uses <code>catp-tabs--segment</code> instead. ' .
-		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field. ' .
-		'The look comes from <code>catp-app.css</code>, pasted into Customizer → Additional CSS — the plugin ships no styles.'
+		'<strong>Setup note (delete once done):</strong> the Groups below are already wired as tabs: ' . esc_html( implode( ' · ', $tabs ) ) .
+		'. The wrapper carries <code>catp-tabs</code> and the plugin builds the tab strip from each Group\'s heading, so renaming a tab is renaming that heading and reordering is dragging a Group. ' .
+		'With no script the page still reads straight down, every section under its heading. ' .
+		'Prefer a tabs block instead? Drop a <strong>Stackable → Tabs</strong> block on the same wrapper class and it takes over — the stylesheet targets the ARIA roles either way. ' .
+		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field.'
 	);
 }
 
@@ -499,49 +515,44 @@ function catp_connect_page_skeleton( $nav_ref = 0 ) {
 		. catp_connect_b_note( 'Give the Query Loop\'s wrapper <code>catp-gallery</code> and each card <code>catp-tile</code> — 2 columns on a phone, 4 on a desktop. Add a Meta Field Block for <code>board_post_display_name</code> ("Anonymous" when empty). Never show <code>board_post_email</code>.' )
 	);
 
-	$home = $home_intro
-		. catp_connect_b_note( '<strong>Setup note (delete once done):</strong> the two Groups below are Home\'s top tabs: Updates · Drop Zone. Add a <strong>Stackable → Tabs</strong> block with those labels, give it the class <code>catp-tabs catp-tabs--folder</code> (the file-folder tabs the prototype uses on Home), and move each Group into its tab.' )
-		. $home_updates
-		. $home_dropzone;
+	$home = $home_intro . catp_connect_b_tabs( 'folder', $home_updates . $home_dropzone );
 
 	// Resources has TWO tab levels in the prototype: Bookings vs Materials &
 	// Equipment on top, and the individual tools underneath. The Groups below
 	// mirror that nesting — an outer Group per category, inner Groups per tool.
 	$resources = catp_connect_b_page_header( 'Resources', 'Make space for the work.' )
-		. catp_connect_b_note(
-			'<strong>Setup note (delete once done):</strong> this page has two tab levels. '
-			. 'Add a <strong>Stackable → Tabs</strong> block with <code>catp-tabs catp-tabs--segment</code> and the labels <em>Bookings</em> · <em>Materials &amp; Equipment</em>; '
-			. 'inside each of those, nest a second Tabs block with <code>catp-tabs catp-tabs--sub</code> for the tools listed in its heading.'
-		)
-		. catp_connect_b_tab( 'bookings', 'Bookings',
-			catp_connect_b_note( 'Second level here: Tutoring · Studio · Photo Form.' )
-			. catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab — the app captures nothing for tutoring.' ) )
+		. catp_connect_b_tabs( 'segment',
+		catp_connect_b_tab( 'bookings', 'Bookings',
+			catp_connect_b_tabs( 'sub',
+			catp_connect_b_tab( 'tutoring', 'Tutoring', catp_connect_b_para( 'Book tutoring through the program\'s existing request page:' ) . catp_connect_b_shortcode( '[catp_tutoring_button text="Request Tutoring"]' ) . catp_connect_b_note( 'The button appears once the Tutoring External URL is filled in under App Settings. Nothing else goes in this tab — the app captures nothing for tutoring.' ) )
 			. catp_connect_b_tab( 'studio', 'Studio', catp_connect_b_note( 'Booking Calendar goes here: 4 fixed slots (08:00–10:00, 10:00–12:00, 13:00–15:00, 15:00–17:00), a gear checklist (<code>catp-check</code> rows), and the school email as contact. Must also block times taken by regular classes.' ) )
 			. catp_connect_b_tab( 'photo-form', 'Photo Form', catp_connect_b_note( 'Forminator form goes here: school email (@kctcs.edu, required even for a guest), session type, desired date, guest name, preferred photographer. For the <strong>Has a guest?</strong> switch: add a single checkbox field, give it the CSS class <code>catp-toggle</code> (it becomes the sliding pill) and put <code>catp-toggle-row</code> on its wrapper. Then use <strong>Forminator\'s own conditional logic</strong> to show Guest name only when it is ticked — no code needed. Outside a Forminator form, give the field to reveal the class <code>catp-reveal</code> and the plugin\'s script handles it.' ) )
-		)
+		) )
 		. catp_connect_b_tab( 'materials', 'Materials & Equipment',
-			catp_connect_b_note( 'Second level here: Program Goods · Borrow.' )
-			. catp_connect_b_tab( 'program-goods', 'Program Goods',
+			catp_connect_b_tabs( 'sub',
+			catp_connect_b_tab( 'program-goods', 'Program Goods',
 				catp_connect_b_shortcode( '[catp_goods_calculator]' )
 				. catp_connect_b_note( 'The calculator is rendered by the plugin: it lists every published <strong>Product</strong> with its size and price, adds a quantity stepper to each row, and keeps a running total. Print materials first, Merch after the divider — that order comes from <code>product_category</code>. To change what it shows, edit the Products; to change how it looks, edit <code>catp-app.css</code>. Attributes: <code>currency</code>, <code>note</code>, <code>heading="no"</code>.' )
 				. catp_connect_b_note( 'To let students send the list: put a Forminator form under this shortcode, give one hidden or textarea field the class <code>catp-goods-summary</code>, and the calculator fills it with the chosen items and the total. Give the submit button the attribute <code>data-catp-requires-items</code> to keep it disabled until something is picked.' )
 			)
 			. catp_connect_b_tab( 'borrow', 'Borrow', catp_connect_b_note( 'WP Inventory Manager goes here: the 10 shared iPads with live available / checked-out status (<code>catp-status</code> badges) and the request form. Same-day, in-classroom use only, and a faculty member must check the iPad out.' ) )
-		);
+		) ) );
 
 	$get_involved = catp_connect_b_page_header( 'Get Involved', 'Put your skills into motion.' )
 		. catp_connect_b_tabs_intro( array( 'Volunteer Form', 'Submit Work' ) )
-		. catp_connect_b_tab( 'volunteer-form', 'Volunteer Form', catp_connect_b_note( 'Forminator form goes here: school email, request date, event (dropdown), and the "Become a Peer Tutor" request (subject + availability). Say clearly that volunteer hours count toward practicum hours.' ) )
-		. catp_connect_b_tab( 'submit-work', 'Submit Work', catp_connect_b_note( 'Forminator form goes here: name, work type (Ad / Photo / Web), OneDrive folder link (no upload), optional event. Show the file-naming instructions next to the form.' ) );
+		. catp_connect_b_tabs( 'sub two',
+		catp_connect_b_tab( 'volunteer-form', 'Volunteer Form', catp_connect_b_note( 'Forminator form goes here: school email, request date, event (dropdown), and the "Become a Peer Tutor" request (subject + availability). Say clearly that volunteer hours count toward practicum hours.' ) )
+		. catp_connect_b_tab( 'submit-work', 'Submit Work', catp_connect_b_note( 'Forminator form goes here: name, work type (Ad / Photo / Web), OneDrive folder link (no upload), optional event. Show the file-naming instructions next to the form.' ) ) );
 
 	$more = catp_connect_b_page_header( 'More', 'Find your people. Keep growing.' )
 		. catp_connect_b_tabs_intro( array( 'My Program', 'Preparation' ) )
-		. catp_connect_b_tab( 'my-program', 'My Program',
+		. catp_connect_b_tabs( 'sub two',
+		catp_connect_b_tab( 'my-program', 'My Program',
 			catp_connect_b_heading( 'Classes', 3 ) . catp_connect_b_query( 'subject', 14, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>subject_teachers</code> and <code>subject_location</code> inside each card.' )
 			. catp_connect_b_heading( 'Faculty & Staff', 3 ) . catp_connect_b_shortcode( '[catp_directory]' ) . catp_connect_b_note( 'The directory is rendered by the plugin, with a search box that filters as you type (name, subject or room, accents ignored). Grouping is derived from the data: a teacher listed in some subject\'s <code>subject_teachers</code> is Faculty, one listed in none is Administration. Attributes: <code>placeholder</code>, <code>groups="faculty|administration"</code>, <code>actions="no"</code>.' )
 			. catp_connect_b_heading( 'Peer Tutors', 3 ) . catp_connect_b_query( 'peer_tutor', 16, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>peer_tutor_subject</code> and <code>peer_tutor_availability</code>. Never show <code>peer_tutor_school_email</code>.' )
 		)
-		. catp_connect_b_tab( 'preparation', 'Preparation', catp_connect_b_note( 'Portfolio-readiness progress bar + NOCTI exam-prep module (game-style, with a streak counter). Not designed yet.' ) );
+		. catp_connect_b_tab( 'preparation', 'Preparation', catp_connect_b_note( 'Portfolio-readiness progress bar + NOCTI exam-prep module (game-style, with a streak counter). Not designed yet.' ) ) );
 
 	$help = catp_connect_b_page_header( 'Help', 'Quick answers for your next step.' )
 		. catp_connect_b_group( 'catp-chat', catp_connect_b_para( 'Hi — I can help you find CATP answers. Choose a question or type your own.', 'catp-bubble' ) )
