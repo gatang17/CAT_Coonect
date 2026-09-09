@@ -148,7 +148,7 @@ The page skeleton is built from **core Gutenberg blocks only** — Groups, Headi
 Two notes for whoever designs on top of this:
 
 - **Blocksy's Customizer already handles global typography and colors** (Customizer → Typography / Colors). Use it for fonts and the palette; leave this stylesheet for the pieces Blocksy doesn't know about (cards, eyebrows, section headers).
-- A few rules use a doubled class (`.catp-card.catp-card > *`) and `!important` on purpose: WordPress prints its own layout CSS *after* plugin stylesheets, and it caps and centers the width of every child block. Without that override, labels and titles drift to the middle of their card. Keep them unless you also remove the constrained layout.
+- **One rule matters more than it looks.** A theme with a "constrained" layout puts `max-width: <content-size>` and `margin-left/right: auto !important` on every child of every Group. Inside a flex row those auto margins absorb all the free space, so a `flex: 1` item collapses to zero and its text renders one letter down the page; and the max-width caps things meant to span the row. `.catp-app [class*="catp-"] > * { max-width: none !important; margin-inline: 0 !important; }` switches it off throughout the app, and the two places that do want centring — `.catp-page` and the lightbox — get it back explicitly. Fifty-nine classes in this file lay themselves out with flex or grid, which is why this is one rule and not a list.
 
 - **Additional CSS does not load inside the block editor.** That is the cost of keeping the styling out of the plugin: pages look plain while you edit them and correct on the front end. Preview in a new tab.
 

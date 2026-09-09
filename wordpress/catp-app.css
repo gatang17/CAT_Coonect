@@ -123,19 +123,28 @@
   color: #66725e; font-size: 12px; font-weight: 700;
 }
 
-/* Themes with a "constrained" layout cap every child block's width and
-   centre it. Inside these components we lay things out ourselves, so opt
-   those children out. The doubled class raises specificity on purpose:
-   WordPress prints its layout CSS after this file. */
-.catp-section.catp-section > *,
-.catp-section-row.catp-section-row > *,
-.catp-card.catp-card > *,
-.catp-form.catp-form > *,
-.catp-badge.catp-badge > * {
+/* Themes with a "constrained" layout put this on every child of every Group:
+       max-width: <content-size>; margin-left: auto !important; margin-right: auto !important;
+   Inside our own components that is actively harmful. On a flex row, auto
+   margins absorb ALL the free space, so a `flex: 1` item collapses to zero
+   width and its text renders one letter per line. On a grid it breaks the
+   tracks. And the max-width caps things meant to span the row.
+
+   59 of the classes in this file lay themselves out with flex or grid, so
+   rather than list them — a list that goes stale the moment one is added —
+   opt out the children of every `catp-` element, then put the centring back
+   on the two places that actually want it. */
+.catp-app [class*="catp-"] > * {
   max-width: none !important;
   margin-inline: 0 !important;
-  width: auto;
 }
+/* the phone-width column stays centred, and uncapped by the theme */
+.catp-app .catp-page {
+  max-width: none !important;
+  margin-inline: auto !important;
+}
+/* a modal <dialog> is centred by its own auto margins — leave them alone */
+.catp-app .catp-lightbox { margin: auto !important; }
 
 /* 4. APP SHELL -------------------------------------------------------------- */
 /* One block, two layouts. Build it once as a synced pattern: five links,
