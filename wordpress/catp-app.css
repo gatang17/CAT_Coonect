@@ -529,11 +529,52 @@
 .catp-check .catp-box { display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid #bac5ba; border-radius: 5px; color: #263126; }
 .catp-check:has(input:checked) .catp-box { border-color: var(--catp-accent); background: var(--catp-accent); }
 
-/* toggle */
-.catp-toggle { width: 39px; height: 22px; padding: 3px; border: 0; border-radius: 99px; background: #d9ded9; }
-.catp-toggle span { display: block; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .18s; }
-.catp-toggle[aria-pressed="true"] { background: #a9c832; }
-.catp-toggle[aria-pressed="true"] span { transform: translateX(17px); }
+/* TOGGLE — the sliding pill ("Has a guest?" on the Photo Form)
+   Two shapes, same look:
+     input[type=checkbox].catp-toggle   preferred. A real checkbox, so it
+                                        submits with the form, works with the
+                                        keyboard, and needs no script at all.
+     button.catp-toggle                 what the prototype uses, for a toggle
+                                        that is not part of a form.
+   In Forminator: add `catp-toggle` to the field's CSS class and it changes
+   shape without changing what gets submitted. */
+/* Two classes on purpose: `.catp-form > label` (0,1,1) sets `display:grid`
+   for every field, and a single-class rule would lose to it — the label
+   would sit above the pill instead of beside it. */
+.catp-app .catp-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  color: #5f6b64; font-size: 11px; font-weight: 700;
+}
+.catp-app input.catp-toggle,
+.catp-app button.catp-toggle {
+  position: relative;
+  flex: none;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 39px; height: 22px;
+  min-height: 0;
+  margin: 0; padding: 3px;
+  border: 0; border-radius: 99px;
+  background: #d9ded9;
+  cursor: pointer;
+}
+.catp-app input.catp-toggle::after,
+.catp-app button.catp-toggle span {
+  content: '';
+  position: absolute; top: 3px; left: 3px;
+  display: block;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .18s;
+}
+.catp-app input.catp-toggle:checked,
+.catp-app button.catp-toggle[aria-pressed="true"] { background: #a9c832; }
+.catp-app input.catp-toggle:checked::after,
+.catp-app button.catp-toggle[aria-pressed="true"] span { transform: translateX(17px); }
+.catp-app input.catp-toggle:focus-visible,
+.catp-app button.catp-toggle:focus-visible { outline: 2px solid var(--catp-ring); outline-offset: 2px; }
 
 /* 8. LISTS, CALCULATOR, GALLERY, CHAT ---------------------------------------- */
 
@@ -733,7 +774,8 @@
 .catp-tabs--segment [role="tab"][aria-selected="true"],
 .catp-tabs--sub [role="tab"][aria-selected="true"],
 .catp-slots button[aria-pressed="true"], .catp-days button[aria-pressed="true"],
-.catp-bubble--me, .catp-status--available { background: #000 !important; color: #fff !important; }
+.catp-bubble--me, .catp-status--available,
+.catp-app input.catp-toggle:checked, .catp-app button.catp-toggle[aria-pressed="true"] { background: #000 !important; color: #fff !important; }
 .catp-spark, .catp-header-icon, .catp-notification, .catp-event, .catp-card, .catp-form,
 .catp-calendar, .catp-chip, .catp-bubble, .catp-composer, .catp-search,
 .catp-tabs--segment [role="tablist"] { background: #fff !important; color: #000 !important; }

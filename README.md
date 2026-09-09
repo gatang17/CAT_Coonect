@@ -156,9 +156,9 @@ Two notes for whoever designs on top of this:
 
 **Tabs:** the markup and the click behaviour come from the **Stackable → Tabs** block — CSS alone cannot switch panels. Add `catp-tabs` to the Tabs block for a page's main tabs and `catp-tabs catp-tabs--sub` to a nested one for the second level. The stylesheet targets the ARIA roles (`[role="tab"]`, `[aria-selected]`) that any accessible tabs block emits rather than Stackable's internal class names, so a Stackable update — or swapping it for a different tabs block later — won't break the design.
 
-### 4b. The two pieces of behaviour
+### 4b. The three pieces of behaviour
 
-Everything else on these pages is markup a designer can move. Two things are not markup — adding up a price list and filtering a list as you type — so the plugin renders those, and only those.
+Everything else on these pages is markup a designer can move. Three things are not — adding up a price list, filtering a list as you type, and revealing a field from a switch — so the plugin covers those, and only those.
 
 `[catp_goods_calculator]` lists every published **Product** with its `product_size` and `product_price`, gives each row a quantity stepper, and keeps a running total. `product_category` decides the order and the divider: print materials first, then a **MERCH** rule, then merch. Attributes: `currency` (default `$`), `note`, and `heading="no"` when the page already has its own title.
 
@@ -178,6 +178,12 @@ The two groups are **derived from the data, not from a list of names**: a teache
 Attributes: `placeholder`, `groups="faculty"` or `"administration"` for one group only, and `actions="no"` for plain rows with no expandable panel.
 
 One honest limit: in the prototype, "Request tutoring" from a row opens Resources with that teacher already selected. That needs deep-linking into a Stackable tab, which Stackable does not offer, so the link just opens Resources.
+
+**The Photo Form toggle.** This one is mostly *not* code, and it is worth knowing why. Forminator's free version already does conditional fields, so "show Guest name when *Has a guest?* is ticked" needs no script. What it cannot do is look like the prototype's sliding pill.
+
+So: add a single checkbox field, give it the CSS class `catp-toggle` and its wrapper `catp-toggle-row`. The stylesheet turns it into the pill — a **real checkbox**, which means it submits with the form, works with the keyboard, and animates with no JavaScript at all. Then let Forminator's conditional logic reveal the dependent field.
+
+`assets/catp-forms.js` covers only what Forminator's logic cannot reach: a toggle outside a form, or one revealing a whole block rather than a sibling field. Mark the thing to show with `catp-reveal` (the next one after the toggle) or point at it with `data-catp-reveal="#id"`. When it hides a block it also clears the fields inside, so a value nobody can see is never submitted. It loads on the app pages rather than only where a toggle exists, because the toggle lives inside markup the plugin does not render — there is nothing to detect.
 
 ### 5. What to actually type into each one
 
