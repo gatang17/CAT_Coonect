@@ -87,6 +87,10 @@
 .catp-app * { border-color: var(--catp-border); }
 .catp-app button, .catp-app input, .catp-app select, .catp-app textarea { font: inherit; }
 .catp-app button:disabled { cursor: not-allowed; opacity: .45; }
+/* Any author rule with a `display` beats the browser's `[hidden] {display:none}`,
+   so a component styled `display:flex` stays on screen when script hides it.
+   This makes the attribute mean what it says. */
+.catp-app [hidden] { display: none !important; }
 
 /* Plain elements inside app pages. Wrapped in :where() so they carry only
    `.catp-app`'s specificity — otherwise `.catp-app p` (0,1,1) would outrank
@@ -614,6 +618,23 @@
 .catp-directory-row strong { font-size: 13px; }
 .catp-directory-row span { color: #79857c; font-size: 11px; }
 .catp-room { display: inline-flex; align-items: center; gap: 4px; color: #79857c; font-family: var(--catp-mono); font-size: 9px; }
+
+.catp-directory-actions { display: flex; align-items: center; gap: 12px; padding: 0 0 14px; }
+.catp-directory-actions p { margin: 0; color: #000; font-size: 10px; }
+.catp-directory-actions a, .catp-directory-actions button {
+  padding: 9px 12px;
+  border: 1.5px solid #000;
+  background: #000;
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  text-decoration: none;
+}
+/* announced to screen readers, invisible on screen */
+.catp-app .screen-reader-text {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 
 /* peer-tutor list */
 .catp-leaderboard { display: grid; gap: 0; margin-top: 6px; padding-top: 18px; border-top: 1px solid var(--catp-border); }

@@ -538,7 +538,7 @@ function catp_connect_page_skeleton( $nav_ref = 0 ) {
 		. catp_connect_b_tabs_intro( array( 'My Program', 'Preparation' ) )
 		. catp_connect_b_tab( 'my-program', 'My Program',
 			catp_connect_b_heading( 'Classes', 3 ) . catp_connect_b_query( 'subject', 14, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>subject_teachers</code> and <code>subject_location</code> inside each card.' )
-			. catp_connect_b_heading( 'Faculty & Staff', 3 ) . catp_connect_b_query( 'teacher', 15, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>teacher_title</code> and <code>teacher_office_location</code>.' )
+			. catp_connect_b_heading( 'Faculty & Staff', 3 ) . catp_connect_b_shortcode( '[catp_directory]' ) . catp_connect_b_note( 'The directory is rendered by the plugin, with a search box that filters as you type (name, subject or room, accents ignored). Grouping is derived from the data: a teacher listed in some subject\'s <code>subject_teachers</code> is Faculty, one listed in none is Administration. Attributes: <code>placeholder</code>, <code>groups="faculty|administration"</code>, <code>actions="no"</code>.' )
 			. catp_connect_b_heading( 'Peer Tutors', 3 ) . catp_connect_b_query( 'peer_tutor', 16, $plain_card ) . catp_connect_b_note( 'Add Meta Field Blocks for <code>peer_tutor_subject</code> and <code>peer_tutor_availability</code>. Never show <code>peer_tutor_school_email</code>.' )
 		)
 		. catp_connect_b_tab( 'preparation', 'Preparation', catp_connect_b_note( 'Portfolio-readiness progress bar + NOCTI exam-prep module (game-style, with a streak counter). Not designed yet.' ) );

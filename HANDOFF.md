@@ -68,6 +68,7 @@ These come from the program's requirements, not from taste:
 - **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`. Re-running "Create page skeleton" with the **Overwrite** checkbox replaces the five pages' content with a fresh skeleton — handy right after a plugin update, destructive once someone has designed those pages, so leave it unchecked by default.
 - **The look**: `wordpress/catp-app.css` (tokens at the top), then re-paste it into Customizer → Additional CSS.
 - **The Goods prices**: edit the **Products**, not the code — the calculator reads them. Its markup is `includes/goods-calculator.php` and its arithmetic `assets/catp-goods.js`.
+- **Who appears in the directory, and in which group**: edit the **Teachers** and the **Classes / Subjects**. A teacher listed in a subject's `subject_teachers` shows as Faculty; one listed in none shows as Administration with their `teacher_title`. Markup in `includes/directory.php`, search in `assets/catp-directory.js`.
 - **The data model itself**: update `database/schema.sql` too, so the reference stays honest.
 - Commit to the repo. Don't let the live site drift from what's in git.
 
