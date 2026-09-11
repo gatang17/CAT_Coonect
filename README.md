@@ -102,6 +102,17 @@ Plugins → Add New → search "Advanced Custom Fields" → install the free one
 
 This plugin was verified on a real WordPress 7.1 + ACF 6.8.9 install: all nine types register, all nine groups load with the expected field counts, and the fields round-trip (a subject with three teachers, a teacher with title + office, a product with price, the Tutoring URL via its shortcode).
 
+### Making the fields editable in the admin (do this before handing the site over)
+
+Out of the box the plugin registers the nine field groups from `acf-field-groups.json` as **local** groups. That is convenient — a fresh install has its fields with no manual step — but a local group is read-only in the ACF admin, and a local group always outranks a database one with the same key. That second half is the part that bites: importing the JSON on top of a plugin that is still registering it looks like the import did nothing, because ACF keeps serving the PHP copy.
+
+Since 0.11.0 the plugin stands down per group. On every request it checks which `group_catp_*` keys already exist as `acf-field-group` posts and skips exactly those, so:
+
+1. Go to **Custom Fields → Tools → Import Field Groups** and upload `wordpress/catp-connect/acf-field-groups.json` (App Settings → Setup Tools will hand you a copy of the file from a running site).
+2. Reload the Custom Fields screen. The nine groups are now database groups: fully editable, no "read-only" notice.
+
+From then on ACF owns them. Add a field, rename a label, add an option to the Category dropdown — all from the admin, no code change, nothing to keep in sync. The JSON stays in the repo as the installer and as the record of the original schema; it is not read for a group that has been imported.
+
 **Manual alternative, if you'd rather not upload a plugin:** install the free Custom Post Type UI plugin, create the nine post types from the table above by hand, then Custom Fields → Tools → Import Field Groups → upload `wordpress/catp-connect/acf-field-groups.json`. Same end result, more clicking, and the configuration then exists only in that site's database.
 
 ### 3. Install Meta Field Block (to show ACF values on the front end)

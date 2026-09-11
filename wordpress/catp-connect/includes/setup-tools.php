@@ -37,10 +37,10 @@ function catp_connect_setup_menu() {
  * Serve acf-field-groups.json as a download.
  *
  * ACF's own Tools -> Export only lists field groups stored in the database.
- * Ours are registered from the plugin with acf_add_local_field_group(), so
- * they are read-only there and absent from that screen — by design, so the
- * repo stays the single source of truth. This gives back the one thing that
- * design took away: getting the file out of a running site.
+ * Ours start out registered from the plugin with acf_add_local_field_group(),
+ * so until they are imported they are read-only and absent from that screen.
+ * This gives back the one thing that takes away: getting the file out of a
+ * running site, so it can be imported and handed over to ACF for editing.
  *
  * Goes through admin-post.php because a download needs headers, and the
  * settings page has already started output by the time it renders.
