@@ -15,7 +15,7 @@ This README is the map of the whole project: what the app looks like, how its da
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
 | `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, renders the two pieces that need script — the **Program Goods calculator** (`[catp_goods_calculator]`) and the **teacher directory** with its live search (`[catp_directory]`), and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the five app pages with a page header, the fixed navigation and one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
 | `wordpress/catp-app.css` | The app stylesheet: design tokens (colors, fonts, borders) at the top, then text roles, the navigation shell, the tab styling and the app components. **Not loaded by the plugin** — paste it into Appearance → Customize → Additional CSS. Every rule is a reusable class you apply from the editor's *Additional CSS class(es)* field, so a page built later reuses the same vocabulary. | **Whoever does the visual design.** Change the variables at the top and the whole app follows — without ever opening a code file. Keep this repo copy in sync with what is pasted on the site. |
-| `wordpress/catp-connect/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. The plugin loads this file automatically; it is also importable by hand via Custom Fields → Tools. | **The person filling in content** reads it (via the ACF screens it produces) to know exactly which fields to fill for each catalog item. **Whoever maintains the site** edits it here, in the repo, not in the ACF UI. |
+| `wordpress/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. **Imported once by hand** via Custom Fields → Tools → Import; the plugin never reads it. | **Whoever sets the site up** imports it once. After that it is a starting point kept for the record — the live fields are edited in the ACF admin, not here. |
 
 Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
 
@@ -79,12 +79,12 @@ Plugins → Add New → search "Advanced Custom Fields" → install the free one
 
 ### 2. Upload and activate the CATP Connect plugin
 
-`wordpress/catp-connect/` in this repo is a small WordPress plugin. It registers all nine custom post types in code and loads the ACF field groups from the `acf-field-groups.json` it ships with — so there is nothing to click through in Custom Post Type UI and nothing to import by hand.
+`wordpress/catp-connect/` in this repo is a small WordPress plugin. It registers all nine custom post types in code, and nothing else about the data model — so there is nothing to click through in Custom Post Type UI. **The fields are not in the plugin.** They are imported once from `wordpress/acf-field-groups.json` and then live in ACF, editable from the admin (see *The split* below).
 
 1. Zip the folder — from the repo root: `cd wordpress && zip -r catp-connect.zip catp-connect`.
 2. Plugins → Add New → Upload Plugin → choose `catp-connect.zip` → Install Now → Activate.
 3. The admin menu now shows Locations, Teachers, Classes / Subjects, Products, Events, Photographers, Peer Tutors, Board Posts and App Settings, and Custom Fields → Field Groups lists the nine groups.
-4. **App Settings → Setup Tools** has two buttons, both safe to press repeatedly (they skip what already exists): **Load starter catalog** creates the faculty offices, the 11 teachers with titles/offices, the 4 subjects linked to their teachers, and the 6 products; **Create page skeleton** creates Home / Resources / Get Involved / Help / More with a page header and one Group per tab (Home's are **Updates** and **Drop Zone**) (built from core blocks, ready to be converted into Stackable Tabs), stores the fixed navigation as the **App Shell Nav** synced pattern and places it on every page, sets Home as the front page and builds an "App Navigation" menu. Activate the theme first so the menu can attach to it. What the buttons can't know (classrooms, the Tutoring URL, Large board's real size) they list on screen as "still to do by hand". They appear there as read-only (loaded from the plugin) **on purpose**: to change a field, edit `acf-field-groups.json` in the repo and re-upload the plugin, so the configuration stays versioned instead of living only in one site's database. A **Download acf-field-groups.json** button on that same Setup Tools page gets the file out of a running site — ACF's own Tools → Export cannot list these groups, because it only knows about ones kept in the database.
+4. **App Settings → Setup Tools** has two buttons, both safe to press repeatedly (they skip what already exists): **Load starter catalog** creates the faculty offices, the 11 teachers with titles/offices, the 4 subjects linked to their teachers, and the 6 products; **Create page skeleton** creates Home / Resources / Get Involved / Help / More with a page header and one Group per tab (Home's are **Updates** and **Drop Zone**) (built from core blocks, ready to be converted into Stackable Tabs), stores the fixed navigation as the **App Shell Nav** synced pattern and places it on every page, sets Home as the front page and builds an "App Navigation" menu. Activate the theme first so the menu can attach to it. What the buttons can't know (classrooms, the Tutoring URL, Large board's real size) they list on screen as "still to do by hand". The starter catalog writes ACF values, so **import the field groups before pressing it** (step 2 below) or the values have nowhere to land.
 
 | Post type slug | Label | Supports | Public / REST | Notes |
 |---|---|---|---|---|
@@ -102,18 +102,29 @@ Plugins → Add New → search "Advanced Custom Fields" → install the free one
 
 This plugin was verified on a real WordPress 7.1 + ACF 6.8.9 install: all nine types register, all nine groups load with the expected field counts, and the fields round-trip (a subject with three teachers, a teacher with title + office, a product with price, the Tutoring URL via its shortcode).
 
-### Making the fields editable in the admin (do this before handing the site over)
+### The split: what is code and what is editable
 
-Out of the box the plugin registers the nine field groups from `acf-field-groups.json` as **local** groups. That is convenient — a fresh install has its fields with no manual step — but a local group is read-only in the ACF admin, and a local group always outranks a database one with the same key. That second half is the part that bites: importing the JSON on top of a plugin that is still registering it looks like the import did nothing, because ACF keeps serving the PHP copy.
+The plugin and the field groups are deliberately two separate things, installed separately, that never touch each other:
 
-Since 0.11.0 the plugin stands down per group. On every request it checks which `group_catp_*` keys already exist as `acf-field-group` posts and skips exactly those, so:
+| | Lives in | Changed by |
+|---|---|---|
+| The nine post types | The plugin (PHP) | Editing the plugin. Nobody should need to. |
+| Every field, label, relation and dropdown option | ACF, in the site's database | **The ACF admin.** No code, no re-upload. |
+| The look | `catp-app.css`, pasted into Customizer → Additional CSS | Editing that CSS. |
 
-1. Go to **Custom Fields → Tools → Import Field Groups** and upload `wordpress/catp-connect/acf-field-groups.json` (App Settings → Setup Tools will hand you a copy of the file from a running site).
-2. Reload the Custom Fields screen. The nine groups are now database groups: fully editable, no "read-only" notice.
+So: **install the plugin, then import `wordpress/acf-field-groups.json` once** via Custom Fields → Tools → Import Field Groups. From that moment ACF owns the fields. Add a field, rename a label, add an option to the Category dropdown, rewire a relation — all from the admin. The JSON is not read at runtime and does not need to be kept in sync; it is the installer and the record of the original schema.
 
-From then on ACF owns them. Add a field, rename a label, add an option to the Category dropdown — all from the admin, no code change, nothing to keep in sync. The JSON stays in the repo as the installer and as the record of the original schema; it is not read for a group that has been imported.
+(Before 0.12.0 the plugin registered the groups itself with `acf_add_local_field_group()`. That made them read-only in the admin and, because a local group outranks a database one with the same key, it also made importing the JSON look like it did nothing. That is gone.)
 
-**Manual alternative, if you'd rather not upload a plugin:** install the free Custom Post Type UI plugin, create the nine post types from the table above by hand, then Custom Fields → Tools → Import Field Groups → upload `wordpress/catp-connect/acf-field-groups.json`. Same end result, more clicking, and the configuration then exists only in that site's database.
+#### The one thing that is a contract
+
+The shortcodes read ACF values **by field name**. Renaming a *label* is always safe; renaming one of these *names*, or deleting its field, silently empties whatever renders it:
+
+`location_type` · `teacher_title` · `teacher_office_location` · `subject_teachers` · `product_size` · `product_price` · `product_category` · `event_date` · `board_post_image` · `board_post_display_name` · `board_post_date` · `tutoring_external_url`
+
+`product_category` also has two fixed values behind its labels — `print_material` and `merch`. The Goods calculator splits its list on those, so add options freely, but do not rename those two.
+
+**Manual alternative, if you'd rather not upload a plugin:** install the free Custom Post Type UI plugin, create the nine post types from the table above by hand, then Custom Fields → Tools → Import Field Groups → upload `wordpress/acf-field-groups.json` exactly as above. Same end result, more clicking.
 
 ### 3. Install Meta Field Block (to show ACF values on the front end)
 

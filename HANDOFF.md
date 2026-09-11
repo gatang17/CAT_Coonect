@@ -12,7 +12,8 @@ Last updated: September 2026 (after the starter catalog and page skeleton were l
 |---|---|
 | `README.md` | The project map: every screen, every data type, every decision and why. |
 | `database/schema.sql` | Reference model of the data. Nothing runs it — it's the "correct shape" to check against. |
-| `wordpress/catp-connect/` | A WordPress plugin. Registers the 9 custom post types, loads the ACF field groups (`acf-field-groups.json`), provides the `[catp_tutoring_button]` shortcode, and a **Setup Tools** page with two one-click actions (see below). Ships no CSS and renders no markup. |
+| `wordpress/catp-connect/` | A WordPress plugin. Registers the 9 custom post types, provides the `[catp_tutoring_button]` shortcode, and a **Setup Tools** page with two one-click actions (see below). Ships no CSS and no fields. |
+| `wordpress/acf-field-groups.json` | The 9 ACF field groups. Imported **once** via Custom Fields → Tools → Import. The plugin does not read it. |
 | `wordpress/catp-app.css` | The whole look, in one file you paste into **Appearance → Customize → Additional CSS**. Tokens at the top, then the navigation shell, the tab styling and every reusable component class. Deliberately outside the plugin so a colour change never means editing code. |
 
 **On the live site** (Hostinger, `catconnect.gatangdesigns.io`) — as of this handoff:
@@ -63,8 +64,9 @@ These come from the program's requirements, not from taste:
 
 ## How to change things
 
-- **A field** (add/rename/reorder): edit `wordpress/catp-connect/acf-field-groups.json` (it's ACF's own export format), re-zip, re-upload with "Replace current with uploaded". The groups are read-only in the ACF admin on purpose — the repo is the source of truth.
-- **Getting that JSON out of a running site**: App Settings → Setup Tools → *Download acf-field-groups.json*. ACF's own Tools → Export cannot list these groups, because it only knows about field groups stored in the database and these are registered from the plugin. The button is there so that design does not cost you the file.
+- **A field** (add/rename/reorder, change a dropdown, rewire a relation): do it in **Custom Fields** in the WordPress admin. No code, no re-upload, no re-zip. Since 0.12.0 the plugin does not register fields at all — ACF owns them, from the one-time import of `wordpress/acf-field-groups.json`.
+- **The exception**: the shortcodes look fields up by *name*. Renaming a label is safe; renaming the field name `location_type`, `teacher_title`, `teacher_office_location`, `subject_teachers`, `product_size`, `product_price`, `product_category`, `event_date`, `board_post_image`, `board_post_display_name`, `board_post_date` or `tutoring_external_url` is not — nor are the two values `print_material` / `merch` behind the Category dropdown.
+- **Backing the fields up**: Custom Fields → Tools → Export now lists all nine groups, because they live in the database. That is the copy to keep once anyone has edited them.
 - **A post type**: edit `catp_connect_post_types()` in `wordpress/catp-connect/catp-connect.php`.
 - **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`. Re-running "Create page skeleton" with the **Overwrite** checkbox replaces the five pages' content with a fresh skeleton — handy right after a plugin update, destructive once someone has designed those pages, so leave it unchecked by default.
 - **The look**: `wordpress/catp-app.css` (tokens at the top), then re-paste it into Customizer → Additional CSS.

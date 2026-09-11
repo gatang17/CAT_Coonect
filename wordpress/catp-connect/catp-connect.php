@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       CATP Connect
  * Plugin URI:        https://github.com/gatang17/CAT_Coonect
- * Description:       Data layer for the CATP Connect companion app: registers its custom post types, loads its ACF field groups from acf-field-groups.json, provides the [catp_tutoring_button], [catp_goods_calculator], [catp_directory] and [catp_board] shortcodes, and one-click Setup Tools (starter catalog, page skeleton) under App Settings. Ships no CSS — the styling lives in catp-app.css, pasted into the Customizer.
- * Version:           0.11.0
+ * Description:       Data layer for the CATP Connect companion app: registers its custom post types and provides the [catp_tutoring_button], [catp_goods_calculator], [catp_directory] and [catp_board] shortcodes, and one-click Setup Tools (starter catalog, page skeleton) under App Settings. Ships no CSS — the styling lives in catp-app.css, pasted into the Customizer.
+ * Version:           0.12.0
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Requires Plugins:  advanced-custom-fields
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CATP_CONNECT_VERSION', '0.11.0' );
+define( 'CATP_CONNECT_VERSION', '0.12.0' );
 define( 'CATP_CONNECT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CATP_CONNECT_FILE', __FILE__ );
 
@@ -29,8 +29,8 @@ require_once CATP_CONNECT_DIR . 'includes/board.php';
 /**
  * The app's custom post types.
  *
- * Slugs must stay in sync with the `post_type` location rules in
- * acf-field-groups.json and with the table names in database/schema.sql.
+ * Slugs must stay in sync with the `post_type` location rules in the ACF
+ * field groups and with the table names in database/schema.sql.
  *
  * `public` controls whether a type is reachable on the front end and in
  * the REST API. Types whose post titles are student emails (photographer)
@@ -155,78 +155,6 @@ function catp_connect_register_post_types() {
 				'map_meta_cap'        => true,
 			)
 		);
-	}
-}
-
-/**
- * Field group keys that already exist in the database.
- *
- * ACF stores every field group as an `acf-field-group` post whose `post_name`
- * is the group key, so an imported copy of acf-field-groups.json shows up here
- * under the same `group_catp_*` keys the JSON declares.
- *
- * @return array Map of group key => true.
- */
-function catp_connect_imported_field_group_keys() {
-	static $keys = null;
-	if ( null !== $keys ) {
-		return $keys;
-	}
-
-	global $wpdb;
-	$keys = array();
-	$rows = $wpdb->get_col(
-		"SELECT post_name FROM {$wpdb->posts}
-		 WHERE post_type = 'acf-field-group'
-		 AND post_status IN ( 'publish', 'acf-disabled' )"
-	);
-	if ( is_array( $rows ) ) {
-		$keys = array_fill_keys( $rows, true );
-	}
-
-	return $keys;
-}
-
-/**
- * Load the ACF field groups from acf-field-groups.json.
- *
- * That file is the same one you import by hand via Custom Fields -> Tools ->
- * Import, and registering it here means a fresh install has its fields with no
- * manual step. But a group registered this way is LOCAL, and a local group
- * always outranks a database one with the same key — so importing the JSON on
- * top of it does nothing visible: ACF keeps serving the PHP copy, which it
- * will not let you edit in the UI.
- *
- * So the plugin stands down per group: any key that already exists as an
- * `acf-field-group` post is skipped here, handing that group to ACF for good.
- * Import the JSON once and every field becomes editable in the admin, with no
- * code change and nothing to keep in sync.
- */
-add_action( 'acf/include_fields', 'catp_connect_register_field_groups' );
-function catp_connect_register_field_groups() {
-	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
-		return;
-	}
-	$file = CATP_CONNECT_DIR . 'acf-field-groups.json';
-	if ( ! is_readable( $file ) ) {
-		return;
-	}
-	$groups = json_decode( file_get_contents( $file ), true );
-	if ( ! is_array( $groups ) ) {
-		return;
-	}
-
-	$imported = catp_connect_imported_field_group_keys();
-
-	foreach ( $groups as $group ) {
-		if ( ! is_array( $group ) || empty( $group['key'] ) ) {
-			continue;
-		}
-		// Already imported: ACF owns this group now, leave it alone.
-		if ( isset( $imported[ $group['key'] ] ) ) {
-			continue;
-		}
-		acf_add_local_field_group( $group );
 	}
 }
 

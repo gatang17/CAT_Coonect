@@ -33,59 +33,6 @@ function catp_connect_setup_menu() {
 	);
 }
 
-/**
- * Serve acf-field-groups.json as a download.
- *
- * ACF's own Tools -> Export only lists field groups stored in the database.
- * Ours start out registered from the plugin with acf_add_local_field_group(),
- * so until they are imported they are read-only and absent from that screen.
- * This gives back the one thing that takes away: getting the file out of a
- * running site, so it can be imported and handed over to ACF for editing.
- *
- * Goes through admin-post.php because a download needs headers, and the
- * settings page has already started output by the time it renders.
- */
-add_action( 'admin_post_catp_connect_export_acf', 'catp_connect_export_acf' );
-function catp_connect_export_acf() {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_die( 'Not allowed.', 403 );
-	}
-	check_admin_referer( 'catp_connect_export_acf' );
-
-	$file = CATP_CONNECT_DIR . 'acf-field-groups.json';
-	if ( ! is_readable( $file ) ) {
-		wp_die( 'acf-field-groups.json is missing from the plugin folder.' );
-	}
-
-	nocache_headers();
-	header( 'Content-Type: application/json; charset=utf-8' );
-	header( 'Content-Disposition: attachment; filename="catp-connect-acf-field-groups-' . gmdate( 'Y-m-d' ) . '.json"' );
-	header( 'Content-Length: ' . filesize( $file ) );
-	readfile( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions -- streaming a file, not fetching a URL.
-	exit;
-}
-
-/** What is inside that file, for the screen to describe it. */
-function catp_connect_acf_summary() {
-	$file = CATP_CONNECT_DIR . 'acf-field-groups.json';
-	if ( ! is_readable( $file ) ) {
-		return array();
-	}
-	$groups = json_decode( file_get_contents( $file ), true );
-	if ( ! is_array( $groups ) ) {
-		return array();
-	}
-	$out = array();
-	foreach ( $groups as $group ) {
-		if ( ! empty( $group['title'] ) ) {
-			$out[] = array(
-				'title'  => $group['title'],
-				'fields' => isset( $group['fields'] ) ? count( $group['fields'] ) : 0,
-			);
-		}
-	}
-	return $out;
-}
 
 function catp_connect_setup_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -148,39 +95,7 @@ function catp_connect_setup_page() {
 		</form>
 
 		<hr>
-		<h2>2. Download the field groups (.json)</h2>
-		<p>
-			<strong>Why this is here and not in ACF.</strong> ACF&rsquo;s Tools &rarr; Export only lists field groups kept in the
-			database. These are registered from the plugin instead, which is what makes them read-only in the ACF admin and
-			keeps the repo the single source of truth &mdash; but it also means ACF has nothing to export. This button gets the
-			file out of the site.
-		</p>
-		<?php $acf_groups = catp_connect_acf_summary(); ?>
-		<?php if ( $acf_groups ) : ?>
-			<p><strong><?php echo count( $acf_groups ); ?> groups:</strong>
-			<?php
-			$parts = array();
-			foreach ( $acf_groups as $group ) {
-				$parts[] = esc_html( $group['title'] ) . ' (' . (int) $group['fields'] . ')';
-			}
-			echo wp_kses_post( implode( ' &middot; ', $parts ) );
-			?>
-			</p>
-		<?php endif; ?>
-		<p>
-			<a class="button button-secondary"
-				href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=catp_connect_export_acf' ), 'catp_connect_export_acf' ) ); ?>">
-				Download acf-field-groups.json
-			</a>
-		</p>
-		<p class="description">
-			It is ACF&rsquo;s own export format, so Tools &rarr; Import takes it back. Importing it creates <em>database</em>
-			copies that sit alongside the ones the plugin registers, so you would see every group twice &mdash; do that only if
-			you mean to stop the plugin registering them and hand the fields over to this site&rsquo;s database.
-		</p>
-
-		<hr>
-		<h2>3. Create page skeleton</h2>
+		<h2>2. Create page skeleton</h2>
 		<p>Creates the five app pages — <strong>Home, Resources, Get Involved, Help, More</strong> — each with a page header, one section per tab (headings, placeholder notes, and the parts that already work: the Tutoring button, and post lists for the directory, events, products and the board) and the fixed navigation. Built from core blocks only; each section is a Group ready to become a Stackable Tab. Also creates the <strong>App Shell Nav</strong> synced pattern, sets Home as the front page and creates an "App Navigation" menu.</p>
 		<form method="post">
 			<?php wp_nonce_field( 'catp_connect_setup', 'catp_nonce' ); ?>
