@@ -464,10 +464,10 @@ function catp_connect_b_page_header( $title, $subtitle ) {
 
 function catp_connect_b_tabs_intro( $tabs ) {
 	return catp_connect_b_note(
-		'<strong>Setup note (delete once done):</strong> the Groups below are already wired as tabs: ' . esc_html( implode( ' · ', $tabs ) ) .
-		'. The wrapper carries <code>catp-tabs</code> and the plugin builds the tab strip from each Group\'s heading, so renaming a tab is renaming that heading and reordering is dragging a Group. ' .
-		'With no script the page still reads straight down, every section under its heading. ' .
-		'Prefer a tabs block instead? Drop a <strong>Stackable → Tabs</strong> block on the same wrapper class and it takes over — the stylesheet targets the ARIA roles either way. ' .
+		'<strong>Setup note (delete once done):</strong> the Groups below are the tab sections: ' . esc_html( implode( ' · ', $tabs ) ) .
+		'. As they stand, the page reads straight down, every section under its heading — that is a working page, not a broken one. ' .
+		'To turn them into tabs, add a <strong>Stackable &rarr; Tabs</strong> block, move one Group into each tab, and put the wrapper class from the Group below (<code>catp-tabs catp-tabs--folder</code>, <code>--segment</code> or <code>--sub</code>) in the Tabs block&rsquo;s <em>Advanced &rarr; Additional CSS class(es)</em>. The stylesheet skins it from there. ' .
+		'Delete the Group&rsquo;s own heading once its text is the tab label, or it shows twice. ' .
 		'Where a note says "Meta Field Block", add that block inside the post list and pick the named ACF field.'
 	);
 }

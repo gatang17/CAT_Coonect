@@ -299,8 +299,9 @@
 /* 5. TABS ------------------------------------------------------------------- */
 /* The markup and the click behaviour come from the Stackable → Tabs block —
    CSS alone cannot switch panels. These rules target the ARIA roles any
-   accessible tabs block emits, not Stackable's internal class names, so an
-   update or a swap later will not break the design.
+   accessible tabs block emits, so a swap later will not break the design;
+   the Stackable bridge at the end of this section is the only part that
+   names Stackable's own classes, and it says why.
 
    Three looks, matching the prototype's three:
      catp-tabs--folder    Home's Updates / Drop Zone   (a file-folder tab)
@@ -377,6 +378,96 @@
   background: var(--catp-primary);
 }
 .catp-tabs--sub.catp-tabs--two [role="tab"] { font-size: 12px; }
+
+/* --- Stackable bridge -------------------------------------------------------
+   Everything above targets ARIA roles, which Stackable's Tabs block emits, so
+   the design already applies. Two things still need saying:
+
+   1. Stackable marks the active tab with a CLASS (.stk-block-tabs__tab--active),
+      not aria-selected — so each active look is repeated below.
+   2. Stackable prints per-block CSS with !important from inside the <body>,
+      which lands later in the cascade than this file. The rules below restate
+      the same three looks at a higher specificity so the design holds even if
+      the block's own colour controls are left set.
+
+   Tidier still: clear the colour/border settings in the Tabs block itself, and
+   then Stackable prints nothing to fight with.
+
+   To use it: put `catp-tabs catp-tabs--folder` (or --segment, or --sub) in the
+   Stackable Tabs block's Advanced -> Additional CSS class(es). Nothing else. */
+
+/* The label sits in its own element that Stackable colours, and it colours the
+   ACTIVE one through a four-class selector — so both selectors below put the
+   tablist in the chain to outrank it. Without that, the active label keeps
+   Stackable's colour and only looks right when the two happen to match. */
+.catp-app .catp-tabs [role="tablist"] [role="tab"] *,
+.catp-app .catp-tabs [role="tablist"] [role="tab"].stk-block-tabs__tab--active * {
+  color: inherit !important;
+  background: transparent !important;
+}
+
+/* the block's own strip chrome (the element wrapping the tablist) */
+.catp-app .catp-tabs *:has(> [role="tablist"]) {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* FOLDER */
+.catp-app .catp-tabs--folder [role="tablist"] { border-bottom: 1.5px solid #000 !important; }
+.catp-app .catp-tabs--folder [role="tab"] {
+  border: 1.5px solid transparent !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+  color: var(--catp-muted-foreground) !important;
+}
+.catp-app .catp-tabs--folder [role="tab"].stk-block-tabs__tab--active {
+  border: 1.5px solid #000 !important;
+  border-bottom: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
+}
+
+/* SEGMENT */
+.catp-app .catp-tabs--segment [role="tablist"] {
+  border: 1px solid var(--catp-border) !important;
+  background: var(--catp-card) !important;
+}
+.catp-app .catp-tabs--segment [role="tab"] {
+  border: 0 !important;
+  background: transparent !important;
+  color: #718078 !important;
+}
+.catp-app .catp-tabs--segment [role="tab"].stk-block-tabs__tab--active {
+  border: 0 !important;
+  background: var(--catp-primary) !important;
+  color: var(--catp-primary-foreground) !important;
+  box-shadow: 0 2px 7px #27332918 !important;
+}
+
+/* SUB */
+.catp-app .catp-tabs--sub [role="tablist"] {
+  border: 0 !important;
+  border-bottom: 1px solid var(--catp-border) !important;
+  background: transparent !important;
+}
+.catp-app .catp-tabs--sub [role="tab"] {
+  border: 0 !important;
+  background: transparent !important;
+  color: #718078 !important;
+}
+.catp-app .catp-tabs--sub [role="tab"].stk-block-tabs__tab--active {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--catp-foreground) !important;
+}
+.catp-app .catp-tabs--sub [role="tab"].stk-block-tabs__tab--active::after {
+  content: '';
+  position: absolute; right: 0; bottom: -1px; left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--catp-primary);
+}
 
 .catp-resource-groups { display: grid; gap: 12px; }
 @media (min-width: 1024px) {
