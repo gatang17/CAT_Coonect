@@ -64,6 +64,7 @@ These come from the program's requirements, not from taste:
 ## How to change things
 
 - **A field** (add/rename/reorder): edit `wordpress/catp-connect/acf-field-groups.json` (it's ACF's own export format), re-zip, re-upload with "Replace current with uploaded". The groups are read-only in the ACF admin on purpose — the repo is the source of truth.
+- **Getting that JSON out of a running site**: App Settings → Setup Tools → *Download acf-field-groups.json*. ACF's own Tools → Export cannot list these groups, because it only knows about field groups stored in the database and these are registered from the plugin. The button is there so that design does not cost you the file.
 - **A post type**: edit `catp_connect_post_types()` in `wordpress/catp-connect/catp-connect.php`.
 - **The starter catalog or the page skeleton**: `wordpress/catp-connect/includes/setup-tools.php`. Re-running "Create page skeleton" with the **Overwrite** checkbox replaces the five pages' content with a fresh skeleton — handy right after a plugin update, destructive once someone has designed those pages, so leave it unchecked by default.
 - **The look**: `wordpress/catp-app.css` (tokens at the top), then re-paste it into Customizer → Additional CSS.
