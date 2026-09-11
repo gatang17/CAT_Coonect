@@ -123,7 +123,15 @@
   color: #66725e; font-size: 12px; font-weight: 700;
 }
 
-/* Themes with a "constrained" layout put this on every child of every Group:
+/* NOTE ON SCOPING: the rules in this section carry no `.catp-app` prefix on
+   purpose. The rule that creates the problem — `.catp-page-header
+   { display: flex }` and its siblings — does not depend on that body class
+   either, so if the class were ever missing the breaking half would apply
+   and the fixing half would not: the worst of both. Layout rules stand on
+   the component's own class. Only cosmetics (type, colour, background) are
+   scoped to `.catp-app`.
+   ------------------------------------------------------------------------
+   Themes with a "constrained" layout put this on every child of every Group:
        max-width: <content-size>; margin-left: auto !important; margin-right: auto !important;
    Inside our own components that is actively harmful. On a flex row, auto
    margins absorb ALL the free space, so a `flex: 1` item collapses to zero
@@ -134,7 +142,7 @@
    rather than list them — a list that goes stale the moment one is added —
    opt out the children of every `catp-` element, then put the centring back
    on the two places that actually want it. */
-.catp-app [class*="catp-"] > * {
+[class*="catp-"] > * {
   max-width: none !important;
   margin-inline: 0 !important;
   /* Themes set `width: 100%` on content paragraphs. On a flex item that is
@@ -144,12 +152,12 @@
   width: auto;
 }
 /* the phone-width column stays centred, and uncapped by the theme */
-.catp-app .catp-page {
+.catp-page {
   max-width: none !important;
   margin-inline: auto !important;
 }
 /* a modal <dialog> is centred by its own auto margins — leave them alone */
-.catp-app .catp-lightbox { margin: auto !important; }
+.catp-lightbox { margin: auto !important; }
 
 /* 4. APP SHELL -------------------------------------------------------------- */
 /* One block, two layouts. Build it once as a synced pattern: five links,
@@ -254,7 +262,7 @@
 }
 /* The wordmark sizes to its text. Without this its flex-basis falls back to
    the theme's `width: 100%` and it takes the whole header row. */
-.catp-app .catp-page-header > .catp-brand {
+.catp-page-header > .catp-brand {
   flex: 0 0 auto;
   width: auto;
   white-space: nowrap;
@@ -264,7 +272,7 @@
    wrapper this file has not seen — it must never get narrow enough to
    render "Resources" one letter per line down the page. It would rather
    overflow sideways than build a tower. */
-.catp-app .catp-page-header-copy {
+.catp-page-header-copy {
   flex: 1 1 auto;
   min-width: min(100%, 20ch);
 }

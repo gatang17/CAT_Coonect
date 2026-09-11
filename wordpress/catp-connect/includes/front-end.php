@@ -10,13 +10,44 @@
 
 defined( 'ABSPATH' ) || exit;
 
-/** The four app pages (by slug) get the `catp-app` body class. */
+/**
+ * Which pages get the `catp-app` body class.
+ *
+ * The slug list is a convenience, not the rule. Renaming a page, changing
+ * its permalink or building the app somewhere else would all take the class
+ * away, and the styles that depend on it with it. So the last check is the
+ * honest one: a page carrying the app's own markup IS an app page, whatever
+ * it is called.
+ *
+ * (The stylesheet's layout rules deliberately do not depend on this class —
+ * only its typography and colours do. A page that slips past this still
+ * lays out correctly; it just loses the app's look.)
+ */
 function catp_connect_is_app_page() {
 	if ( is_front_page() ) {
 		return true;
 	}
-	$slugs = array( 'home', 'resources', 'get-involved', 'more', 'help' );
-	return is_page( $slugs ) || is_singular( array( 'event', 'board_post', 'subject', 'teacher', 'peer_tutor', 'product' ) );
+	if ( is_singular( array( 'event', 'board_post', 'subject', 'teacher', 'peer_tutor', 'product' ) ) ) {
+		return true;
+	}
+	if ( is_page( array( 'home', 'resources', 'get-involved', 'more', 'help' ) ) ) {
+		return true;
+	}
+
+	$post = get_queried_object();
+	if ( ! $post instanceof WP_Post || '' === (string) $post->post_content ) {
+		return false;
+	}
+	// The page column the setup tool always wraps a page in.
+	if ( false !== strpos( $post->post_content, 'catp-page' ) ) {
+		return true;
+	}
+	foreach ( array( 'catp_goods_calculator', 'catp_directory', 'catp_board', 'catp_tutoring_button' ) as $shortcode ) {
+		if ( has_shortcode( $post->post_content, $shortcode ) ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 add_filter( 'body_class', 'catp_connect_body_class' );
