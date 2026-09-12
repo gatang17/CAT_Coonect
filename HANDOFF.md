@@ -12,7 +12,8 @@ Last updated: September 2026 (after the starter catalog and page skeleton were l
 |---|---|
 | `README.md` | The project map: every screen, every data type, every decision and why. |
 | `database/schema.sql` | Reference model of the data. Nothing runs it — it's the "correct shape" to check against. |
-| `wordpress/catp-connect/` | A WordPress plugin. Registers the 9 custom post types, provides the `[catp_tutoring_button]` shortcode, and a **Setup Tools** page with two one-click actions (see below). Ships no CSS and no fields. |
+| `wordpress/catp-connect/` | A WordPress plugin. Provides the `[catp_tutoring_button]` shortcode and a **Setup Tools** page with two one-click actions (see below). Ships no CSS, no fields and no post types. |
+| `wordpress/catp-post-types-cptui.json` | The 9 post types. Imported **once** via Custom Post Type UI → Tools → Import. |
 | `wordpress/acf-field-groups.json` | The 9 ACF field groups. Imported **once** via Custom Fields → Tools → Import. The plugin does not read it. |
 | `wordpress/catp-app.css` | The whole look, in one file you paste into **Appearance → Customize → Additional CSS**. Tokens at the top, then the navigation shell, the tab styling and every reusable component class. Deliberately outside the plugin so a colour change never means editing code. |
 
@@ -64,6 +65,7 @@ These come from the program's requirements, not from taste:
 
 ## How to change things
 
+- **A post type** (rename, change what it supports, add one): do it in **CPT UI** in the WordPress admin. Since 0.14.0 the plugin registers none.
 - **A field** (add/rename/reorder, change a dropdown, rewire a relation): do it in **Custom Fields** in the WordPress admin. No code, no re-upload, no re-zip. Since 0.12.0 the plugin does not register fields at all — ACF owns them, from the one-time import of `wordpress/acf-field-groups.json`.
 - **The exception**: the shortcodes look fields up by *name*. Renaming a label is safe; renaming the field name `location_type`, `teacher_title`, `teacher_office_location`, `subject_teachers`, `product_size`, `product_price`, `product_category`, `event_date`, `board_post_image`, `board_post_display_name`, `board_post_date` or `tutoring_external_url` is not — nor are the two values `print_material` / `merch` behind the Category dropdown.
 - **Backing the fields up**: Custom Fields → Tools → Export now lists all nine groups, because they live in the database. That is the copy to keep once anyone has edited them.

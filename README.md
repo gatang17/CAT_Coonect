@@ -15,6 +15,7 @@ This README is the map of the whole project: what the app looks like, how its da
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
 | `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, renders the two pieces that need script — the **Program Goods calculator** (`[catp_goods_calculator]`) and the **teacher directory** with its live search (`[catp_directory]`), and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the five app pages with a page header, the fixed navigation and one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
 | `wordpress/catp-app.css` | The app stylesheet: design tokens (colors, fonts, borders) at the top, then text roles, the navigation shell, the tab styling and the app components. **Not loaded by the plugin** — paste it into Appearance → Customize → Additional CSS. Every rule is a reusable class you apply from the editor's *Additional CSS class(es)* field, so a page built later reuses the same vocabulary. | **Whoever does the visual design.** Change the variables at the top and the whole app follows — without ever opening a code file. Keep this repo copy in sync with what is pasted on the site. |
+| `wordpress/catp-post-types-cptui.json` | The nine post types, in Custom Post Type UI's own import format. Imported **once** via CPT UI → Tools → Import. | **Whoever sets the site up** imports it once. After that the post types are edited in the CPT UI admin. |
 | `wordpress/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. **Imported once by hand** via Custom Fields → Tools → Import; the plugin never reads it. | **Whoever sets the site up** imports it once. After that it is a starting point kept for the record — the live fields are edited in the ACF admin, not here. |
 
 Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
@@ -79,7 +80,7 @@ Plugins → Add New → search "Advanced Custom Fields" → install the free one
 
 ### 2. Upload and activate the CATP Connect plugin
 
-`wordpress/catp-connect/` in this repo is a small WordPress plugin. It registers all nine custom post types in code, and nothing else about the data model — so there is nothing to click through in Custom Post Type UI. **The fields are not in the plugin.** They are imported once from `wordpress/acf-field-groups.json` and then live in ACF, editable from the admin (see *The split* below).
+`wordpress/catp-connect/` in this repo is a small WordPress plugin. It owns **no part of the data model** — no post types, no fields. Both are imported once and then live in the database, editable from the admin (see *The split* below). What the plugin provides is the front end: the four shortcodes and the Setup Tools page.
 
 1. Zip the folder — from the repo root: `cd wordpress && zip -r catp-connect.zip catp-connect`.
 2. Plugins → Add New → Upload Plugin → choose `catp-connect.zip` → Install Now → Activate.
@@ -108,11 +109,18 @@ The plugin and the field groups are deliberately two separate things, installed 
 
 | | Lives in | Changed by |
 |---|---|---|
-| The nine post types | The plugin (PHP) | Editing the plugin. Nobody should need to. |
-| Every field, label, relation and dropdown option | ACF, in the site's database | **The ACF admin.** No code, no re-upload. |
+| The nine post types | Custom Post Type UI, in the site's database | **The CPT UI admin.** No code. |
+| Every field, label, relation and dropdown option | ACF, in the site's database | **The ACF admin.** No code. |
 | The look | `catp-app.css`, pasted into Customizer → Additional CSS | Editing that CSS. |
+| The four shortcodes and Setup Tools | The plugin (PHP) | Editing the plugin. Nobody should need to. |
 
-So: **install the plugin, then import `wordpress/acf-field-groups.json` once** via Custom Fields → Tools → Import Field Groups. From that moment ACF owns the fields. Add a field, rename a label, add an option to the Category dropdown, rewire a relation — all from the admin. The JSON is not read at runtime and does not need to be kept in sync; it is the installer and the record of the original schema.
+Install order matters, because the later steps attach to the earlier ones:
+
+1. **Custom Post Type UI → Tools → Import** ← `wordpress/catp-post-types-cptui.json` (the nine post types)
+2. **Custom Fields → Tools → Import Field Groups** ← `wordpress/acf-field-groups.json` (the eighteen fields)
+3. Upload and activate the CATP Connect plugin (the shortcodes)
+
+The plugin warns in the admin if it is activated with either half missing, since its shortcodes would otherwise just render empty. From that moment CPT UI owns the post types and ACF owns the fields. Add a field, rename a label, add an option to the Category dropdown, rewire a relation — all from the admin. The JSON is not read at runtime and does not need to be kept in sync; it is the installer and the record of the original schema.
 
 (Before 0.12.0 the plugin registered the groups itself with `acf_add_local_field_group()`. That made them read-only in the admin and, because a local group outranks a database one with the same key, it also made importing the JSON look like it did nothing. That is gone.)
 
@@ -121,6 +129,8 @@ So: **install the plugin, then import `wordpress/acf-field-groups.json` once** v
 The shortcodes read ACF values **by field name**. Renaming a *label* is always safe; renaming one of these *names*, or deleting its field, silently empties whatever renders it:
 
 `location_type` · `teacher_title` · `teacher_office_location` · `subject_teachers` · `product_size` · `product_price` · `product_category` · `event_date` · `board_post_image` · `board_post_display_name` · `board_post_date` · `tutoring_external_url`
+
+The nine post-type **slugs** are the same kind of contract — `location`, `teacher`, `subject`, `product`, `event`, `photographer`, `peer_tutor`, `board_post`, `app_setting`. Rename a *label* freely; change a slug and both the shortcodes and ACF's location rules stop matching.
 
 `product_category` also has two fixed values behind its labels — `print_material` and `merch`. The Goods calculator splits its list on those, so add options freely, but do not rename those two.
 

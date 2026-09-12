@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       CATP Connect
  * Plugin URI:        https://github.com/gatang17/CAT_Coonect
- * Description:       Data layer for the CATP Connect companion app: registers its custom post types and provides the [catp_tutoring_button], [catp_goods_calculator], [catp_directory] and [catp_board] shortcodes, and one-click Setup Tools (starter catalog, page skeleton) under App Settings. Ships no CSS — the styling lives in catp-app.css, pasted into the Customizer.
- * Version:           0.13.0
+ * Description:       Front end for the CATP Connect companion app. Owns no post types and no fields — those are imported into Custom Post Type UI and ACF, and stay editable in the admin. Provides the [catp_tutoring_button], [catp_goods_calculator], [catp_directory] and [catp_board] shortcodes, and one-click Setup Tools (starter catalog, page skeleton) under App Settings. Ships no CSS — the styling lives in catp-app.css, pasted into the Customizer.
+ * Version:           0.14.0
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Requires Plugins:  advanced-custom-fields
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CATP_CONNECT_VERSION', '0.13.0' );
+define( 'CATP_CONNECT_VERSION', '0.14.0' );
 define( 'CATP_CONNECT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CATP_CONNECT_FILE', __FILE__ );
 
@@ -24,138 +24,6 @@ require_once CATP_CONNECT_DIR . 'includes/goods-calculator.php';
 require_once CATP_CONNECT_DIR . 'includes/directory.php';
 require_once CATP_CONNECT_DIR . 'includes/forms.php';
 require_once CATP_CONNECT_DIR . 'includes/board.php';
-
-/**
- * The app's custom post types.
- *
- * Slugs must stay in sync with the `post_type` location rules in the ACF
- * field groups and with the table names in database/schema.sql.
- *
- * `public` controls whether a type is reachable on the front end and in
- * the REST API. Types whose post titles are student emails (photographer)
- * or that hold configuration (app_setting) are deliberately NOT public.
- */
-function catp_connect_post_types() {
-	return array(
-		'location'     => array(
-			'singular'    => 'Location',
-			'plural'      => 'Locations',
-			'description' => 'Rooms: classrooms, studios, and teacher offices (Type = "Office").',
-			'supports'    => array( 'title' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-location',
-		),
-		'teacher'      => array(
-			'singular'    => 'Teacher',
-			'plural'      => 'Teachers',
-			'description' => 'Faculty and administration. Post Title = the teacher\'s name.',
-			'supports'    => array( 'title' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-groups',
-		),
-		'subject'      => array(
-			'singular'    => 'Class / Subject',
-			'plural'      => 'Classes / Subjects',
-			'description' => 'Advertising Design, Web Design, Photography, Digital Video. Carries the classroom and the list of teachers.',
-			'supports'    => array( 'title' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-welcome-learn-more',
-		),
-		'product'      => array(
-			'singular'    => 'Product',
-			'plural'      => 'Products',
-			'description' => 'Price list for the Goods calculator. Nothing is ever ordered or submitted.',
-			'supports'    => array( 'title' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-cart',
-		),
-		'event'        => array(
-			'singular'    => 'Event',
-			'plural'      => 'Events',
-			'description' => 'Events/news shown on Home. Post Content = the description.',
-			'supports'    => array( 'title', 'editor' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-calendar-alt',
-		),
-		'photographer' => array(
-			'singular'    => 'Photographer',
-			'plural'      => 'Photographers',
-			'description' => 'Students who hold the photographer role. Post titles are student emails: never public, never in the REST API.',
-			'supports'    => array( 'title' ),
-			'public'      => false,
-			'menu_icon'   => 'dashicons-camera',
-		),
-		'peer_tutor'   => array(
-			'singular'    => 'Peer Tutor',
-			'plural'      => 'Peer Tutors',
-			'description' => 'Approved peer tutors only (the public directory). A post existing here IS the approval.',
-			'supports'    => array( 'title' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-businessperson',
-		),
-		'board_post'   => array(
-			'singular'    => 'Board Post',
-			'plural'      => 'Board Posts',
-			'description' => 'Student gallery submissions. Created by the Board form (Forminator Post Creation) as Drafts; publishing = approval.',
-			'supports'    => array( 'title', 'editor', 'thumbnail' ),
-			'public'      => true,
-			'menu_icon'   => 'dashicons-format-gallery',
-		),
-		'app_setting'  => array(
-			'singular'    => 'App Setting',
-			'plural'      => 'App Settings',
-			'description' => 'Singleton: create exactly ONE post here. Holds the Tutoring external URL.',
-			'supports'    => array( 'title' ),
-			'public'      => false,
-			'menu_icon'   => 'dashicons-admin-generic',
-		),
-	);
-}
-
-add_action( 'init', 'catp_connect_register_post_types' );
-function catp_connect_register_post_types() {
-	foreach ( catp_connect_post_types() as $slug => $cfg ) {
-		$public = (bool) $cfg['public'];
-		$labels = array(
-			'name'               => $cfg['plural'],
-			'singular_name'      => $cfg['singular'],
-			'menu_name'          => $cfg['plural'],
-			'all_items'          => 'All ' . $cfg['plural'],
-			'add_new'            => 'Add New',
-			'add_new_item'       => 'Add New ' . $cfg['singular'],
-			'edit_item'          => 'Edit ' . $cfg['singular'],
-			'new_item'           => 'New ' . $cfg['singular'],
-			'view_item'          => 'View ' . $cfg['singular'],
-			'search_items'       => 'Search ' . $cfg['plural'],
-			'not_found'          => 'No ' . strtolower( $cfg['plural'] ) . ' found.',
-			'not_found_in_trash' => 'No ' . strtolower( $cfg['plural'] ) . ' found in Trash.',
-		);
-
-		register_post_type(
-			$slug,
-			array(
-				'labels'              => $labels,
-				'description'         => $cfg['description'],
-				'public'              => $public,
-				'publicly_queryable'  => $public,
-				'exclude_from_search' => ! $public,
-				'show_ui'             => true,
-				'show_in_menu'        => true,
-				'show_in_nav_menus'   => $public,
-				// REST/block-editor exposure follows `public`: a public type
-				// can be listed with the core Query Loop block; a private one
-				// stays out of /wp-json entirely (and gets the classic editor).
-				'show_in_rest'        => $public,
-				'has_archive'         => false,
-				'rewrite'             => $public ? array( 'slug' => $slug, 'with_front' => false ) : false,
-				'supports'            => $cfg['supports'],
-				'menu_icon'           => $cfg['menu_icon'],
-				'capability_type'     => 'post',
-				'map_meta_cap'        => true,
-			)
-		);
-	}
-}
 
 /**
  * Read one field from the singleton app_setting post.
@@ -212,20 +80,37 @@ function catp_connect_tutoring_button_shortcode( $atts ) {
 }
 
 /**
- * Warn (softly) if ACF isn't active. WordPress 6.5+ already enforces the
- * "Requires Plugins" header above; this covers older installs.
+ * Warn (softly) when the data model this plugin reads is not there.
+ *
+ * The plugin owns no post types and no fields — both are imported and then
+ * live in the database, editable in the admin. That is the point, but it also
+ * means a site can have the plugin and nothing to read, and the shortcodes
+ * would just render empty. Say so instead.
  */
-add_action( 'admin_notices', 'catp_connect_acf_notice' );
-function catp_connect_acf_notice() {
-	if ( class_exists( 'ACF' ) || ! current_user_can( 'activate_plugins' ) ) {
+add_action( 'admin_notices', 'catp_connect_prerequisites_notice' );
+function catp_connect_prerequisites_notice() {
+	if ( ! current_user_can( 'activate_plugins' ) ) {
 		return;
 	}
-	echo '<div class="notice notice-warning"><p><strong>CATP Connect:</strong> Advanced Custom Fields (free) must be installed and active for the catalog fields to appear.</p></div>';
+
+	$missing = array();
+	if ( ! post_type_exists( 'product' ) || ! post_type_exists( 'teacher' ) ) {
+		$missing[] = 'the nine post types (Custom Post Type UI &rarr; Tools &rarr; Import, using <code>catp-post-types-cptui.json</code>)';
+	}
+	if ( ! class_exists( 'ACF' ) ) {
+		$missing[] = 'Advanced Custom Fields (free), then Custom Fields &rarr; Tools &rarr; Import with <code>acf-field-groups.json</code>';
+	}
+	if ( ! $missing ) {
+		return;
+	}
+
+	echo '<div class="notice notice-warning"><p><strong>CATP Connect</strong> reads a data model it does not create. Still missing: '
+		. wp_kses_post( implode( '; and ', $missing ) )
+		. '.</p></div>';
 }
 
 register_activation_hook( __FILE__, 'catp_connect_activate' );
 function catp_connect_activate() {
-	catp_connect_register_post_types();
 	flush_rewrite_rules();
 }
 
