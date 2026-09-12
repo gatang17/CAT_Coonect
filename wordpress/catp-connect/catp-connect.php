@@ -93,20 +93,15 @@ function catp_connect_prerequisites_notice() {
 		return;
 	}
 
-	$missing = array();
-	if ( ! post_type_exists( 'product' ) || ! post_type_exists( 'teacher' ) ) {
-		$missing[] = 'the nine post types (Custom Post Type UI &rarr; Tools &rarr; Import, using <code>catp-post-types-cptui.json</code>)';
-	}
 	if ( ! class_exists( 'ACF' ) ) {
-		$missing[] = 'Advanced Custom Fields (free), then Custom Fields &rarr; Tools &rarr; Import with <code>acf-field-groups.json</code>';
+		echo '<div class="notice notice-warning"><p><strong>CATP Connect</strong> reads a data model it does not create. Install Advanced Custom Fields (free) first.</p></div>';
+		return;
 	}
-	if ( ! $missing ) {
+	if ( post_type_exists( 'product' ) && post_type_exists( 'teacher' ) ) {
 		return;
 	}
 
-	echo '<div class="notice notice-warning"><p><strong>CATP Connect</strong> reads a data model it does not create. Still missing: '
-		. wp_kses_post( implode( '; and ', $missing ) )
-		. '.</p></div>';
+	echo '<div class="notice notice-warning"><p><strong>CATP Connect</strong> reads a data model it does not create. Import <code>catp-connect-acf.json</code> in Custom Fields &rarr; Tools &rarr; Import Field Groups &mdash; one file, the nine post types and the eighteen fields together.</p></div>';
 }
 
 register_activation_hook( __FILE__, 'catp_connect_activate' );

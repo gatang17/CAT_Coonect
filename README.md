@@ -15,8 +15,7 @@ This README is the map of the whole project: what the app looks like, how its da
 | `database/schema.sql` | A normalized relational model of the whole app — every entity and how they relate. | **Reference only.** Nothing in WordPress runs this file. It exists so the person building the site (you) has one place that defines the "correct" shape of the data, independent of which plugin ends up storing it. When something in ACF or a plugin setting seems ambiguous, this is the source of truth to check it against. |
 | `wordpress/catp-connect/` | A small WordPress plugin: registers the app's nine custom post types in code, loads its ACF field groups, renders the two pieces that need script — the **Program Goods calculator** (`[catp_goods_calculator]`) and the **teacher directory** with its live search (`[catp_directory]`), and adds a **Setup Tools** page (App Settings → Setup Tools) with two one-click actions: load the known starter catalog, and create the five app pages with a page header, the fixed navigation and one section per tab. | **Whoever sets up the site.** Zip the folder, upload it under Plugins → Add New → Upload Plugin, activate. |
 | `wordpress/catp-app.css` | The app stylesheet: design tokens (colors, fonts, borders) at the top, then text roles, the navigation shell, the tab styling and the app components. **Not loaded by the plugin** — paste it into Appearance → Customize → Additional CSS. Every rule is a reusable class you apply from the editor's *Additional CSS class(es)* field, so a page built later reuses the same vocabulary. | **Whoever does the visual design.** Change the variables at the top and the whole app follows — without ever opening a code file. Keep this repo copy in sync with what is pasted on the site. |
-| `wordpress/catp-post-types-cptui.json` | The nine post types, in Custom Post Type UI's own import format. Imported **once** via CPT UI → Tools → Import. | **Whoever sets the site up** imports it once. After that the post types are edited in the CPT UI admin. |
-| `wordpress/acf-field-groups.json` | The [Advanced Custom Fields](https://www.advancedcustomfields.com/) field groups, in ACF's own export format. **Imported once by hand** via Custom Fields → Tools → Import; the plugin never reads it. | **Whoever sets the site up** imports it once. After that it is a starting point kept for the record — the live fields are edited in the ACF admin, not here. |
+| `wordpress/catp-connect-acf.json` | One ACF import: the nine post types **and** the eighteen field groups, in ACF's own format (verified key by key against ACF 6.8.10's `get_settings_array()`). Imported **once** via Custom Fields → Tools → Import Field Groups. | **Whoever sets the site up** imports it once. After that post types and fields are both edited in the ACF admin. |
 
 Everything below explains how those pieces fit together and what actually needs to be built in WordPress.
 
@@ -109,18 +108,17 @@ The plugin and the field groups are deliberately two separate things, installed 
 
 | | Lives in | Changed by |
 |---|---|---|
-| The nine post types | Custom Post Type UI, in the site's database | **The CPT UI admin.** No code. |
+| The nine post types | ACF, in the site's database | **The ACF admin** (Custom Fields → Post Types). No code. |
 | Every field, label, relation and dropdown option | ACF, in the site's database | **The ACF admin.** No code. |
 | The look | `catp-app.css`, pasted into Customizer → Additional CSS | Editing that CSS. |
 | The four shortcodes and Setup Tools | The plugin (PHP) | Editing the plugin. Nobody should need to. |
 
-Install order matters, because the later steps attach to the earlier ones:
+Two steps, and there is only one file:
 
-1. **Custom Post Type UI → Tools → Import** ← `wordpress/catp-post-types-cptui.json` (the nine post types)
-2. **Custom Fields → Tools → Import Field Groups** ← `wordpress/acf-field-groups.json` (the eighteen fields)
-3. Upload and activate the CATP Connect plugin (the shortcodes)
+1. **Custom Fields → Tools → Import Field Groups** ← `wordpress/catp-connect-acf.json`. ACF 6.1+ registers post types itself, and its importer dispatches each item in the file by key prefix — `post_type_*` to its post types screen, `group_*` to its field groups screen — so one import creates all nine post types and all eighteen fields, with the relations between them already pointing at each other.
+2. Upload and activate the CATP Connect plugin (the shortcodes).
 
-The plugin warns in the admin if it is activated with either half missing, since its shortcodes would otherwise just render empty. From that moment CPT UI owns the post types and ACF owns the fields. Add a field, rename a label, add an option to the Category dropdown, rewire a relation — all from the admin. The JSON is not read at runtime and does not need to be kept in sync; it is the installer and the record of the original schema.
+Do it in that order. ACF skips registering a post type that already exists (`register_post_types()` checks `post_type_exists()` first), so a plugin that still registers them would silently win and ACF would flag its own as `not_registered` — which is why the plugin stopped registering them in 0.14.0. Add a field, rename a label, add an option to the Category dropdown, rewire a relation — all from the admin. The JSON is not read at runtime and does not need to be kept in sync; it is the installer and the record of the original schema.
 
 (Before 0.12.0 the plugin registered the groups itself with `acf_add_local_field_group()`. That made them read-only in the admin and, because a local group outranks a database one with the same key, it also made importing the JSON look like it did nothing. That is gone.)
 
@@ -134,7 +132,7 @@ The nine post-type **slugs** are the same kind of contract — `location`, `teac
 
 `product_category` also has two fixed values behind its labels — `print_material` and `merch`. The Goods calculator splits its list on those, so add options freely, but do not rename those two.
 
-**Manual alternative, if you'd rather not upload a plugin:** install the free Custom Post Type UI plugin, create the nine post types from the table above by hand, then Custom Fields → Tools → Import Field Groups → upload `wordpress/acf-field-groups.json` exactly as above. Same end result, more clicking.
+**Manual alternative, if the import ever fails on a given host:** everything in that file can be built by hand in the ACF admin — nine post types under Custom Fields → Post Types, then eighteen fields under Field Groups. Keep the slugs and field names exactly as listed above; the labels are free.
 
 ### 3. Install Meta Field Block (to show ACF values on the front end)
 
