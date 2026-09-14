@@ -2,7 +2,7 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "cfaq/conversational-faq",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "title": "Conversational FAQ",
   "category": "widgets",
   "icon": "format-chat",
@@ -80,11 +80,37 @@
       "full"
     ],
     "anchor": true,
+    "customClassName": true,
+    "html": false,
+    "color": {
+      "background": true,
+      "text": true,
+      "link": true
+    },
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true,
+      "__experimentalFontFamily": true,
+      "__experimentalFontWeight": true,
+      "__experimentalLetterSpacing": true,
+      "__experimentalTextTransform": true
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": true,
+        "radius": true,
+        "style": true,
+        "width": true
+      }
+    },
     "spacing": {
       "margin": true,
-      "padding": true
-    },
-    "html": false,
-    "customClassName": true
+      "padding": true,
+      "blockGap": true
+    }
   }
 }

@@ -63,7 +63,7 @@
             })
           ),
           el(PanelBody, { title: __('Colors', 'conversational-faq-block'), initialOpen: false },
-            el('p', { style: { fontSize: '12px', fontStyle: 'italic' } }, __('These two seed the palette. For full control — background, borders, radius, fonts — put a class in Advanced > Additional CSS class(es) and set the --cfaq-* variables on it from the Customizer.', 'conversational-faq-block')),
+            el('p', { style: { fontSize: '12px', fontStyle: 'italic' } }, __('These two paint the question bubble and the Ask button, which the panels below cannot reach. Background, text, border and typography are in those panels — the cards follow whatever you set there.', 'conversational-faq-block')),
             el('p', {}, __('Accent color', 'conversational-faq-block')),
             el(ColorPalette, { value: a.accentColor, onChange: function (v) { set({ accentColor: v || '#8cc63f' }); } }),
             el('p', {}, __('Conversation color', 'conversational-faq-block')),

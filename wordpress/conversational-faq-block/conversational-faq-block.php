@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Conversational FAQ Block
  * Description: A reusable Gutenberg FAQ block styled like a conversation. Visitors ask new questions from the same box; a moderator answers them and the conversation grows.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: Gretel Alvarez Tang
  * License: GPL-2.0-or-later
  * Text Domain: conversational-faq-block
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const CFAQ_VERSION   = '2.0.0';
+const CFAQ_VERSION   = '2.1.0';
 const CFAQ_POST_TYPE = 'cfaq_question';
 
 /**
@@ -323,14 +323,41 @@ function cfaq_render_block( $attributes ) {
 
 	$uid = wp_unique_id( 'cfaq-' );
 
-	// The two colour controls seed the palette; every other token in style.css
-	// falls back to a default, so the Customizer can override any of them by
-	// name on this block's own class.
+	// The only two the editor's own panels cannot reach, because they paint
+	// inner parts rather than the block: the question bubble and the hover.
+	// Everything else — background, text, border, font, spacing — comes from
+	// the block's native controls, through the wrapper attributes below.
 	$style = sprintf(
 		'--cfaq-accent:%s;--cfaq-dark:%s;',
 		esc_attr( $a['accentColor'] ),
 		esc_attr( $a['darkColor'] )
 	);
+
+	// The border panel's three values, handed down as variables.
+	//
+	// They cannot simply be inherited: <details> slots its content into a
+	// shadow tree, so `inherit` inside a card resolves against that slot and
+	// not against the card. A custom property crosses it; `inherit` does not.
+	$border = isset( $attributes['style']['border'] ) && is_array( $attributes['style']['border'] )
+		? $attributes['style']['border']
+		: array();
+
+	$width = isset( $border['width'] ) ? (string) $border['width'] : '';
+	if ( preg_match( '/^\d+(\.\d+)?(px|em|rem)$/', $width ) ) {
+		$style .= '--cfaq-bw:' . esc_attr( $width ) . ';';
+	}
+
+	$radius = isset( $border['radius'] ) && is_string( $border['radius'] ) ? $border['radius'] : '';
+	if ( preg_match( '/^\d+(\.\d+)?(px|em|rem|%)$/', $radius ) ) {
+		$style .= '--cfaq-br:' . esc_attr( $radius ) . ';';
+	}
+
+	// A colour picked from the theme palette arrives as a slug, not a value.
+	if ( isset( $border['color'] ) && preg_match( '/^#[0-9a-f]{3,8}$/i', (string) $border['color'] ) ) {
+		$style .= '--cfaq-bc:' . esc_attr( $border['color'] ) . ';';
+	} elseif ( ! empty( $attributes['borderColor'] ) && preg_match( '/^[a-z0-9-]+$/', (string) $attributes['borderColor'] ) ) {
+		$style .= '--cfaq-bc:var(--wp--preset--color--' . esc_attr( $attributes['borderColor'] ) . ');';
+	}
 
 	// Carries className (Advanced -> Additional CSS class(es)), the anchor,
 	// align and the spacing controls. Without this, a class typed in the editor
