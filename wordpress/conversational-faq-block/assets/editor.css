@@ -1,0 +1,22 @@
+.wp-block-cfaq-conversational-faq .cfaq-editor__item {
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+.wp-block-cfaq-conversational-faq .cfaq-editor__item-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+
+.cfaq-editor__ask-note {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px dashed #c3c4c7;
+  border-radius: 4px;
+  color: #50575e;
+  font-size: 12px;
+  font-style: italic;
+}

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "cfaq/conversational-faq",
+  "version": "2.0.0",
+  "title": "Conversational FAQ",
+  "category": "widgets",
+  "icon": "format-chat",
+  "description": "An editable FAQ presented as a lightweight conversation. Visitors can ask new questions; answering one adds it to the conversation.",
+  "keywords": [
+    "faq",
+    "help",
+    "chat",
+    "questions",
+    "ask"
+  ],
+  "textdomain": "conversational-faq-block",
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": "Help"
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "Quick answers for your next step."
+    },
+    "greeting": {
+      "type": "string",
+      "default": "Hi — choose a question below, or ask a new one."
+    },
+    "label": {
+      "type": "string",
+      "default": "Suggested questions"
+    },
+    "placeholder": {
+      "type": "string",
+      "default": "Ask your own question"
+    },
+    "askLabel": {
+      "type": "string",
+      "default": "Ask"
+    },
+    "pendingAnswer": {
+      "type": "string",
+      "default": "Thanks for asking. Nobody has answered this one yet — check back soon and it will be here."
+    },
+    "askSuccess": {
+      "type": "string",
+      "default": "Your question is on its way. Once someone answers it, it joins the conversation above."
+    },
+    "allowAsking": {
+      "type": "boolean",
+      "default": true
+    },
+    "accentColor": {
+      "type": "string",
+      "default": "#8cc63f"
+    },
+    "darkColor": {
+      "type": "string",
+      "default": "#111111"
+    },
+    "items": {
+      "type": "array",
+      "default": [
+        {
+          "question": "How do I get started?",
+          "answer": "Add your answer here."
+        },
+        {
+          "question": "Where can I find more information?",
+          "answer": "Add your answer here."
+        }
+      ]
+    }
+  },
+  "supports": {
+    "align": [
+      "wide",
+      "full"
+    ],
+    "anchor": true,
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "html": false,
+    "customClassName": true
+  }
+}

@@ -1,0 +1,170 @@
+/* Conversational FAQ Block
+   ------------------------------------------------------------------
+   Every value worth reskinning is a custom property. LAYOUT is not:
+   the grid, the flex row and the padding rhythm stay put, so a theme
+   can restyle this completely without the arrangement moving.
+
+   To restyle it, put a class in the block's Advanced -> Additional CSS
+   class(es) and set the tokens on that class from the Customizer:
+
+     .my-faq {
+       --cfaq-font:         "DM Sans", system-ui, sans-serif;
+       --cfaq-bg:           #f7f6f0;
+       --cfaq-surface:      #ffffff;
+       --cfaq-text:         #1b221f;
+       --cfaq-border-color: #dfe5df;
+       --cfaq-border-width: 1px;
+       --cfaq-radius:       12px;
+     }
+   ------------------------------------------------------------------ */
+
+.cfaq {
+  /* seeds — also set inline by the block's two colour controls */
+  --cfaq-dark: #111;
+  --cfaq-accent: #8cc63f;
+
+  /* type */
+  --cfaq-font: inherit;
+  --cfaq-font-heading: var(--cfaq-font);
+  --cfaq-font-size: 1rem;
+  --cfaq-title-size: clamp(2.65rem, 5vw, 4.5rem);
+  --cfaq-title-weight: inherit;
+  --cfaq-title-tracking: -.055em;
+  --cfaq-question-weight: 700;
+  --cfaq-label-size: .75rem;
+  --cfaq-label-tracking: .18em;
+  --cfaq-label-transform: uppercase;
+
+  /* colour */
+  --cfaq-bg: transparent;
+  --cfaq-surface: #fff;
+  --cfaq-text: #192a3d;
+  --cfaq-muted: #3a4f66;
+  --cfaq-accent-text: var(--cfaq-dark);
+  --cfaq-bubble-bg: var(--cfaq-dark);
+  --cfaq-bubble-text: #fff;
+  --cfaq-button-bg: var(--cfaq-dark);
+  --cfaq-button-text: #fff;
+
+  /* frame */
+  --cfaq-border-width: 1.5px;
+  --cfaq-border-style: solid;
+  --cfaq-border-color: var(--cfaq-dark);
+  --cfaq-border: var(--cfaq-border-width) var(--cfaq-border-style) var(--cfaq-border-color);
+  --cfaq-radius: 0;
+  --cfaq-shadow: none;
+  --cfaq-gap: 12px;
+
+  box-sizing: border-box;
+  max-width: 1100px;
+  margin-inline: auto;
+  background: var(--cfaq-bg);
+  color: var(--cfaq-text);
+  font-family: var(--cfaq-font);
+  font-size: var(--cfaq-font-size);
+}
+
+.cfaq *, .cfaq *::before, .cfaq *::after { box-sizing: border-box; }
+
+.cfaq__title {
+  margin: 0;
+  font-family: var(--cfaq-font-heading);
+  font-size: var(--cfaq-title-size);
+  font-weight: var(--cfaq-title-weight);
+  line-height: .95;
+  letter-spacing: var(--cfaq-title-tracking);
+}
+.cfaq__subtitle { margin: 14px 0 56px; font-size: 1.15rem; color: var(--cfaq-muted); }
+.cfaq__greeting {
+  max-width: 720px; margin: 0 0 28px; padding: 20px 24px;
+  border: var(--cfaq-border); border-radius: var(--cfaq-radius);
+  box-shadow: var(--cfaq-shadow);
+  background: var(--cfaq-surface); font-size: 1.05rem;
+}
+.cfaq__label {
+  margin: 26px 0 12px;
+  font-size: var(--cfaq-label-size); font-weight: 800;
+  letter-spacing: var(--cfaq-label-tracking); text-transform: var(--cfaq-label-transform);
+}
+
+.cfaq__items { display: grid; gap: var(--cfaq-gap); }
+.cfaq__item {
+  margin: 0; border: var(--cfaq-border); border-radius: var(--cfaq-radius);
+  box-shadow: var(--cfaq-shadow); background: var(--cfaq-surface);
+}
+.cfaq__item[hidden] { display: none; }
+.cfaq__item summary {
+  position: relative; display: flex; align-items: center; min-height: 62px;
+  padding: 15px 58px 15px 20px;
+  font-weight: var(--cfaq-question-weight); cursor: pointer; list-style: none;
+}
+.cfaq__item summary::-webkit-details-marker { display: none; }
+.cfaq__item summary::after { content: "→"; position: absolute; right: 20px; font-size: 1.55rem; font-weight: 400; }
+.cfaq__item[open] { border: 0; box-shadow: none; background: transparent; }
+.cfaq__item[open] summary {
+  width: max-content; max-width: 85%; min-height: auto;
+  margin: 0 0 14px auto; padding: 14px 18px;
+  border-radius: var(--cfaq-radius);
+  background: var(--cfaq-bubble-bg); color: var(--cfaq-bubble-text);
+}
+.cfaq__item[open] summary::after { display: none; }
+.cfaq__answer {
+  margin: 0; padding: 19px 22px;
+  border: var(--cfaq-border); border-radius: var(--cfaq-radius);
+  box-shadow: var(--cfaq-shadow); background: var(--cfaq-surface);
+}
+.cfaq__answer > :first-child { margin-top: 0; }
+.cfaq__answer > :last-child { margin-bottom: 0; }
+
+/* A question this visitor just asked: here for them, not yet for anyone else.
+   An open item drops its own border by design, so the cue that carries in both
+   states is the answer box — dashed and muted, visibly a placeholder. */
+.cfaq__item--pending { border-style: dashed; }
+.cfaq__item--pending .cfaq__answer {
+  border-style: dashed;
+  color: var(--cfaq-muted);
+  font-style: italic;
+}
+
+.cfaq__ask {
+  display: flex; margin-top: 24px;
+  border: var(--cfaq-border); border-radius: var(--cfaq-radius);
+  box-shadow: var(--cfaq-shadow); background: var(--cfaq-surface);
+  overflow: hidden;
+}
+.cfaq__ask input[type="text"] {
+  flex: 1; min-width: 0;
+  border: 0 !important; padding: 15px 20px !important;
+  background: transparent !important; color: inherit; font: inherit;
+}
+.cfaq__ask input[type="text"]:focus { outline: 2px solid var(--cfaq-border-color); outline-offset: -3px; }
+.cfaq__ask button {
+  min-width: 58px; padding: 0 18px;
+  border: 0; border-left: var(--cfaq-border);
+  background: var(--cfaq-button-bg); color: var(--cfaq-button-text);
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.cfaq__ask button:hover, .cfaq__ask button:focus-visible { background: var(--cfaq-accent); color: var(--cfaq-accent-text); }
+.cfaq__ask button[disabled] { opacity: .6; cursor: default; }
+
+/* the honeypot: off-screen rather than display:none, which bots skip */
+.cfaq__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.cfaq__status { margin: 14px 0 0; color: var(--cfaq-muted); }
+.cfaq__status[hidden] { display: none; }
+.cfaq__status--error { color: #a0432a; }
+
+.cfaq__empty { margin: 14px 0 0; color: var(--cfaq-muted); }
+.cfaq__empty[hidden] { display: none; }
+
+@media (max-width: 767px) {
+  .cfaq__subtitle { margin-bottom: 36px; }
+  .cfaq__greeting { padding: 17px 18px; }
+  .cfaq__item summary { min-height: 58px; padding: 14px 50px 14px 16px; }
+  .cfaq__item[open] summary { max-width: 92%; }
+  .cfaq__answer { padding: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cfaq * { scroll-behavior: auto !important; }
+}
